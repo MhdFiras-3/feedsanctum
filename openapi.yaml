@@ -1,0 +1,148 @@
+openapi: 3.0.0
+info:
+  title: gofeed
+  description: RSS feed aggregator
+  version: 1.0.0
+servers:
+  - url: https://example.com
+
+paths:
+  /api/v1/register:
+    post:
+      summary: Register a new user
+      operationId: registerUser
+      tags:
+        - Registration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: Returned when the user is successfully created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Returned when the JSON payload is malformed or input validation fails.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/ErrorResponse'
+                  - $ref: '#/components/schemas/ValidationError'
+              examples:  
+                malformedJson:
+                  summary: Malformed JSON payload
+                  value:
+                    error: "invalid request payload"
+                validationError:
+                  summary: Input validation failed
+                  value:
+                    errors:
+                      - field: "email"
+                        message: "invalid email format"
+                      - field: "password"
+                        message: "password must be at least 20 characters"
+        '409':
+          description: Returned when the email address is already registered.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:  
+                duplicateEmail:
+                  summary: Duplicate email
+                  value:
+                    error: "email already registered"
+        '500':
+          description: Returned when an unhandled server error occurs (e.g., password hashing failure or database connection failure).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:  
+                internalServerError:
+                  summary: Internal Server Error
+                  value:
+                    error: "something went wrong"
+              
+
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+        - email
+        
+    RegisterRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 45
+          description: User's display name (trimmed)
+        email:
+          type: string
+          format: email
+          maxLength: 50
+        password:
+          type: string
+          minLength: 20
+          maxLength: 100
+          description: Plaintext password
+      required:
+        - name
+        - email
+        - password
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+
+    ValidationError:
+      type: object
+      properties:
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              message:
+                type: string
+  securitySchemes:  
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT  
+
+security: [] # public
+
+     
