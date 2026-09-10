@@ -12,7 +12,7 @@ paths:
       summary: Register a new user
       operationId: registerUser
       tags:
-        - Registration
+        - Authentication & Users
       requestBody:
         required: true
         content:
@@ -69,6 +69,76 @@ paths:
                   summary: Internal Server Error
                   value:
                     error: "something went wrong"
+# ---------------------------------------------------------------
+  /api/v1/login:
+    post:
+      summary: User Login
+      operationId: loginUser
+      tags:
+        - Authentication & Users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Returned on successful authentication with user details and tokens.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+              examples:
+                successfulLogin:
+                  summary: Successful login
+                  value:
+                    id: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11"
+                    name: "Jane Doe"
+                    email: "jane@example.com"
+                    created_at: "2025-01-15T10:30:00Z"
+                    updated_at: "2025-01-15T10:30:00Z"
+                    access_token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                    refresh_token: "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+        '400':
+          description: Returned when the JSON request body is malformed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:  
+                malformedJson:
+                  summary: Malformed JSON payload
+                  value:
+                    error: "invalid request payload"
+        '401':
+          description: Returned when the email does not exist or the password does not match.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:  
+                unauthorized:
+                  summary: wrong email or password
+                  value:
+                    error: "wrong email or password"
+
+        '500':
+          description: Returned when token generation fails or database token storage fails.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:  
+                tokenGenerationFailed:
+                  summary: Token generation failed
+                  value:
+                    error: "failed to issue token"  
+                refreshTokenSaveFailed:
+                  summary: Refresh token storage failed
+                  value:
+                    error: "failed to save refresh token"
+
               
 
 components:
@@ -117,6 +187,23 @@ components:
         - email
         - password
 
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 50
+        password:
+          type: string
+          minLength: 20
+          maxLength: 100
+          description: Plaintext password
+      required:
+        - email
+        - password
+
+
     ErrorResponse:
       type: object
       properties:
@@ -137,6 +224,20 @@ components:
                 type: string
               message:
                 type: string
+    AuthResponse:
+      allOf:
+        - $ref: '#/components/schemas/User'  
+        - type: object                         
+          properties:
+            access_token:
+              type: string
+              description: JWT access token
+            refresh_token:
+              type: string
+              description: Opaque refresh token
+          required:
+            - access_token
+            - refresh_token
   securitySchemes:  
     bearerAuth:
       type: http
