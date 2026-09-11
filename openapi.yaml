@@ -194,8 +194,40 @@ paths:
                   summary: token generation failed
                   value:
                     error: "failed to issue token"  
-
-      
+# ---------------------------------------------------------------
+  /api/v1/logout:
+    post:
+      summary: Logout User
+      operationId: logoutUser
+      tags:
+        - Authentication & Users
+      security:
+        - refreshTokenAuth: []
+      responses:
+        '204':
+          description: Returned when the refresh token has been successfully revoked. No response body is returned.
+        '400':
+          description: Returned when the `Authorization` header is missing, malformed, or does not contain a Bearer token.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:  
+                missingBearerToken:
+                  summary: missing header,malformed or empty
+                  value:
+                    error: "failed to get bearer token"
+        '500':
+          description: Returned when a database error occurs while revoking the token.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:  
+                tokenRevocationFailed:
+                  summary: token revokation failed
+                  value:
+                    error: "failed to revoke token" 
 
 components:
   schemas:
