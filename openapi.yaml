@@ -138,8 +138,64 @@ paths:
                   summary: Refresh token storage failed
                   value:
                     error: "failed to save refresh token"
+# ---------------------------------------------------------------
+  /api/v1/refresh:
+    post:
+      summary: Refresh Token
+      operationId: rotateToken
+      tags:
+        - Authentication & Users
+      security:
+        - refreshTokenAuth: []
+      responses:
+        '200':
+          description: Returned when tokens are successfully rotated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenPair'
+              examples:
+                successfulRefresh:
+                  summary: tokens resfreshed successfully
+                  value:
+                    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                    "refresh_token": "3a7b18e4-84bf-4dc7-b248-cb5897c5f899"
+        '400':
+          description: Returned when the `Authorization` header is missing, malformed, or does not contain a Bearer token.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:  
+                missingBearerToken:
+                  summary: missing header,malformed or empty
+                  value:
+                    error: "failed to get bearer token"
+        '401':
+          description: Returned when the refresh token does not exist, has expired, or is invalid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:  
+                refreshTokenInvalid:
+                  summary: failed to find token
+                  value:
+                    error: "failed to find token"
 
-              
+        '500':
+          description: Returned when token generation, rotation, or database storage fails.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:  
+                tokenGenerationFailed:
+                  summary: token generation failed
+                  value:
+                    error: "failed to issue token"  
+
+      
 
 components:
   schemas:
@@ -224,25 +280,36 @@ components:
                 type: string
               message:
                 type: string
+
     AuthResponse:
       allOf:
         - $ref: '#/components/schemas/User'  
-        - type: object                         
-          properties:
-            access_token:
-              type: string
-              description: JWT access token
-            refresh_token:
-              type: string
-              description: Opaque refresh token
-          required:
-            - access_token
-            - refresh_token
-  securitySchemes:  
+        - $ref: '#/components/schemas/TokenPair'
+
+    TokenPair:
+      type: object                         
+      properties:
+        access_token:
+          type: string
+          description: JWT access token
+        refresh_token:
+          type: string
+          description: Opaque refresh token
+      required:
+        - access_token
+        - refresh_token 
+
+  securitySchemes:
     bearerAuth:
       type: http
       scheme: bearer
-      bearerFormat: JWT  
+      bearerFormat: JWT
+      description: Access token for authenticated endpoints
+    refreshTokenAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: opaque
+      description: Refresh token for /refresh and /logout
 
 security: [] # public
 
