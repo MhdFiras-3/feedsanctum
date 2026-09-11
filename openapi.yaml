@@ -290,7 +290,94 @@ paths:
                   summary: missing context
                   value:
                     error: "missing user id in context" 
- # ---------------------------------------------------------------             
+
+    patch:
+      summary: Update current user
+      operationId: updateCurrentUser
+      tags:
+        - Authentication & Users
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserRequest'
+            examples:
+              partialUpdate:
+                summary: Update name and email
+                value:
+                  name: "Jane Smith"
+                  email: "janesmith@example.com"
+      responses:
+        '200':
+          description: Returned when user details are successfully updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserUpdateResponse'
+              examples:
+                userUpdated:
+                  summary: User updated successfully
+                  value:
+                    id: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11"
+                    name: "Jane Smith"
+                    email: "janesmith@example.com"
+                    updated_at: "2025-01-15T11:45:00Z"
+        '400':
+          description: Returned when the JSON payload is malformed, no fields are provided, or input validation fails.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                malformedJson:
+                  summary: Malformed JSON payload
+                  value:
+                    error: "invalid request payload"
+                noFieldsProvided:
+                  summary: No fields provided
+                  value:
+                    error: "no fields to update"
+                invalidName:
+                  summary: Input validation failed
+                  value:
+                    error: "invalid name"
+        '401':
+          description: Returned when the access token is missing or invalid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                authTokenInvalid:
+                  summary: Token missing or invalid
+                  value:
+                    error: "invalid access token"
+        '409':
+          description: Returned when the new email is already registered by another account.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                duplicateEmail:
+                  summary: Duplicate email
+                  value:
+                    error: "email already registered"
+        '500':
+          description: Returned on internal server errors, context lookup issues, or database failures.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                internalServerError:
+                  summary: Internal server error
+                  value:
+                    error: "something went wrong"
+# ---------------------------------------------------------------             
 components:
   schemas:
     User:
@@ -392,6 +479,46 @@ components:
       required:
         - access_token
         - refresh_token 
+
+    UpdateUserRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 45
+          description: New display name (trimmed)
+        email:
+          type: string
+          format: email
+          maxLength: 50
+          description: New email address (must be unique)
+        password:
+          type: string
+          minLength: 20
+          maxLength: 100
+          description: New plaintext password
+      minProperties: 1
+      
+    UserUpdateResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        updated_at:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+        - email
+        - updated_at
 
   securitySchemes:
     bearerAuth:
