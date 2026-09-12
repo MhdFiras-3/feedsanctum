@@ -292,7 +292,7 @@ paths:
                     error: "missing user id in context" 
 
     patch:
-      summary: Update current user
+      summary: Partially updates the authenticated user's profile details. At least one field must be provided.
       operationId: updateCurrentUser
       tags:
         - Authentication & Users
@@ -413,7 +413,55 @@ paths:
                   summary: Missing user ID in context
                   value:
                     error: "missing user id in context"
-# ---------------------------------------------------------------             
+# --------------------------------------------------------------- 
+  /api/v1/feeds:
+    get:
+      summary: Retrieves a list of all registered RSS feeds in the system.
+      operationId: listFeeds
+      tags:
+        - Feeds
+      responses:
+        '200':
+          description: Returned with a JSON array of feeds. Returns an empty array if no feeds exist.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Feed'
+              examples:
+                feedsList:
+                  summary: List with two feeds
+                  value:
+                    - id: "e4b01140-5b5c-4f9e-9764-77a83d7cb45d"
+                      url: "https://exampletech.com/index.xml"
+                      category: "tech"
+                      last_fetched_at: "2025-01-15T10:30:00Z"
+                      created_at: "2025-01-14T08:00:00Z"
+                      updated_at: "2025-01-15T10:30:00Z"
+                    - id: "76fa2e7d-304e-4e44-b054-945fa5cb9c20"
+                      url: "https://news.ycombinator.com/rss"
+                      category: "news"
+                      last_fetched_at: null
+                      created_at: "2025-01-15T09:00:00Z"
+                      updated_at: "2025-01-15T09:00:00Z"
+                emptyList:
+                  summary: No feeds registered
+                  value: []
+        '500':
+          description: Returned when a database error occurs while fetching feeds.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                databaseFailure:
+                  summary: Database failure
+                  value:
+                    error: "something went wrong"            
+# --------------------------------------------------------------- 
+
+
 components:
   schemas:
     User:
@@ -437,6 +485,36 @@ components:
         - id
         - name
         - email
+
+    Feed:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        url:
+          type: string
+          format: uri
+        category:
+          type: string
+        last_fetched_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: Null if the feed has never been fetched.
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      required:
+        - id
+        - url
+        - category
+        - created_at
+        - updated_at
+        - last_fetched_at
         
     RegisterRequest:
       type: object
