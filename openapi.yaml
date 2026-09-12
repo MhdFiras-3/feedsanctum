@@ -750,10 +750,10 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               examples:
-                unauthorized:
-                  summary: Unauthorized
+                authTokenInvalid:
+                  summary: Token missing or invalid
                   value:
-                    error: "unauthorized"
+                    error: "invalid access token"
         '404':
           description: Returned when the specified feed_id does not exist in the database.
           content:
@@ -780,6 +780,75 @@ paths:
                   summary: Missing user ID in context
                   value:
                     error: "missing user id in context"
+# --------------------------------------------------------------- 
+  /api/v1/follows/{feedID}:
+    delete:
+      summary: Unfollows a feed for the authenticated user.
+      operationId: deleteFeedFollow
+      tags:
+        - Feeds
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: feedID
+          in: path
+          required: true
+          description: The UUID of the feed to unfollow.
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Returned when the feed follow is successfully deleted. No response body is returned.
+        '400':
+          description: Returned when the provided feedID in the URL is not a valid UUID format.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalidFeedID:
+                  summary: Invalid feed ID format
+                  value:
+                    error: "invalid feed id"
+        '401':
+          description: Returned when the access token is missing or invalid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                authTokenInvalid:
+                  summary: Token missing or invalid
+                  value:
+                    error: "invalid access token"
+        '404':
+          description: Returned when the authenticated user is not following the specified feed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                feedFollowNotFound:
+                  summary: Feed follow not found
+                  value:
+                    error: "no such feed follow found"
+        '500':
+          description: Returned when context lookup fails or a database error occurs while deleting the follow.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                databaseFailure:
+                  summary: Database failure
+                  value:
+                    error: "something went wrong"
+                missingContext:
+                  summary: Missing user ID in context
+                  value:
+                    error: "missing user id in context"
+# --------------------------------------------------------------- 
 components:
   schemas:
     User:

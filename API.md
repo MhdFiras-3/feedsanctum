@@ -891,7 +891,7 @@ Returned by auth middleware when the access token is missing or invalid.
 
 ```json
 {
-  "error": "unauthorized"
+  "error": "invalid access token"
 }
 ```
 
