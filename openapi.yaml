@@ -458,7 +458,101 @@ paths:
                 databaseFailure:
                   summary: Database failure
                   value:
-                    error: "something went wrong"            
+                    error: "something went wrong" 
+
+    post:
+      summary: Registers a new RSS feed in the system within a transaction and automatically creates a feed follow entry with a custom label for the authenticated user.
+      operationId: createFeed
+      tags:
+        - Feeds
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateFeedRequest'
+            examples:
+              createFeed:
+                summary: Register a tech blog feed
+                value:
+                  url: "https://exampletech.com/index.xml"
+                  name: "My Tech Blog"
+      responses:
+        '201':
+          description: Returned when the feed is successfully created and followed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FeedFollow'
+              examples:
+                feedCreated:
+                  summary: Feed created and followed
+                  value:
+                    id: "c1f76e10-90fb-4d89-9a06-4b8c6e2467b2"
+                    user_id: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11"
+                    feed_id: "e4b01140-5b5c-4f9e-9764-77a83d7cb45d"
+                    name: "My Tech Blog"
+                    user_name: "Jane Doe"
+                    created_at: "2025-01-15T12:00:00Z"
+                    updated_at: "2025-01-15T12:00:00Z"
+        '400':
+          description: Returned when the request body is malformed or input validation fails.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                malformedJson:
+                  summary: Malformed JSON payload
+                  value:
+                    error: "invalid request body"
+                invalidUrl:
+                  summary: Invalid feed URL
+                  value:
+                    error: "invalid URL"
+                invalidName:
+                  summary: Invalid feed name
+                  value:
+                    error: "invalid feed name"
+        '401':
+          description: Returned when the access token is missing or invalid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                authTokenInvalid:
+                  summary: Token missing or invalid
+                  value:
+                    error: "invalid access token"
+        '409':
+          description: Returned when the feed URL is already registered in the system.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                duplicateFeed:
+                  summary: Feed URL already registered
+                  value:
+                    error: "feed already registered"
+        '500':
+          description: Returned when context lookup fails or a database transaction error occurs.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                databaseFailure:
+                  summary: Database or transaction failure
+                  value:
+                    error: "something went wrong"
+                missingContext:
+                  summary: Missing user ID in context
+                  value:
+                    error: "missing user id in context"           
 # --------------------------------------------------------------- 
   /api/v1/feeds/{feedID}:
     get:
@@ -695,6 +789,55 @@ components:
         - id
         - name
         - email
+        - updated_at
+
+    CreateFeedRequest:
+      type: object
+      properties:
+        url:
+          type: string
+          format: uri
+          description: The RSS feed URL.
+        name:
+          type: string
+          minLength: 1
+          maxLength: 45
+          description: Custom name/label for the feed follow.
+      required:
+        - url
+        - name
+
+    FeedFollow:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        feed_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          description: The user's custom label for this feed.
+        user_name:
+          type: string
+          description: The display name of the user who follows this feed.
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      required:
+        - id
+        - user_id
+        - feed_id
+        - name
+        - user_name
+        - created_at
         - updated_at
 
   securitySchemes:
