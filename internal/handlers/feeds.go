@@ -214,7 +214,7 @@ func (cfg *APIConfig) HandlerGetFeedByID(w http.ResponseWriter, r *http.Request)
 	}
 	feedID, err := uuid.Parse(chi.URLParam(r, "feedID"))
 	if err != nil {
-		respWithError(w, http.StatusBadRequest, "no such feed id")
+		respWithError(w, http.StatusBadRequest, "invalid feed id")
 		log.Printf("failed to get feed id from url: %v", err)
 		return
 	}

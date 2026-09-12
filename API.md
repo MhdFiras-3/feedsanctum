@@ -621,7 +621,7 @@ Returned when the provided `feedID` is not a valid UUID format.
 
 ```json
 {
-  "error": "no such feed id"
+  "error": "invalid feed id"
 }
 ```
 
