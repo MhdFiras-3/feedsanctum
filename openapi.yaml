@@ -377,6 +377,42 @@ paths:
                   summary: Internal server error
                   value:
                     error: "something went wrong"
+    delete:
+      summary: Deletes the authenticated user's account and associated data from the system.
+      operationId: deleteCurrentUser
+      tags:
+        - Authentication & Users
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Returned when the user account is successfully deleted. No response body is returned.
+        '401':
+          description: Returned by auth middleware when the access token is missing, expired, or invalid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                authTokenInvalid:
+                  summary: Token missing, expired, or invalid
+                  value:
+                    error: "invalid access token"
+        '500':
+          description: Returned when an error occurs while deleting the user from the database or retrieving context.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                databaseFailure:
+                  summary: Database failure while deleting user
+                  value:
+                    error: "failed to delete user"
+                missingContext:
+                  summary: Missing user ID in context
+                  value:
+                    error: "missing user id in context"
 # ---------------------------------------------------------------             
 components:
   schemas:
