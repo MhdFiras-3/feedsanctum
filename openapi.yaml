@@ -619,6 +619,167 @@ paths:
                   value:
                     error: "something went wrong"
 # --------------------------------------------------------------- 
+  /api/v1/follows:
+    get:
+      summary: Retrieves a list of all RSS feed subscriptions (follows) for the authenticated user.
+      operationId: listFeedFollows
+      tags:
+        - Feeds
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Returned with a JSON array of feed follows for the authenticated user. Returns an empty array if the user follows no feeds.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FeedFollow'
+              examples:
+                followsList:
+                  summary: One followed feed
+                  value:
+                    - id: "c1f76e10-90fb-4d89-9a06-4b8c6e2467b2"
+                      user_id: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11"
+                      feed_id: "e4b01140-5b5c-4f9e-9764-77a83d7cb45d"
+                      name: "My Tech Blog"
+                      user_name: "Jane Doe"
+                      created_at: "2025-01-15T12:00:00Z"
+                      updated_at: "2025-01-15T12:00:00Z"
+                emptyList:
+                  summary: No followed feeds
+                  value: []
+        '401':
+          description: Returned when the access token is missing or invalid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                authTokenInvalid:
+                  summary: Token missing or invalid
+                  value:
+                    error: "invalid access token"
+        '500':
+          description: Returned when context lookup fails or a database error occurs while fetching follows.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                databaseFailure:
+                  summary: Database failure
+                  value:
+                    error: "something went wrong"
+                missingContext:
+                  summary: Missing user ID in context
+                  value:
+                    error: "missing user id in context"
+
+    post:
+      summary: Subscribes the authenticated user to an existing RSS feed using its feed ID.
+      operationId: followFeed
+      tags:
+        - Feeds
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FollowFeedRequest'
+            examples:
+              followExistingFeed:
+                summary: Follow an existing feed
+                value:
+                  feed_id: "e4b01140-5b5c-4f9e-9764-77a83d7cb45d"
+                  name: "My Favorite Tech Blog"
+      responses:
+        '201':
+          description: Returned when the feed is successfully followed for the first time.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FeedFollow'
+              examples:
+                feedFollowed:
+                  summary: Feed followed successfully
+                  value:
+                    id: "c1f76e10-90fb-4d89-9a06-4b8c6e2467b2"
+                    user_id: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11"
+                    feed_id: "e4b01140-5b5c-4f9e-9764-77a83d7cb45d"
+                    name: "My Favorite Tech Blog"
+                    user_name: "Jane Doe"
+                    created_at: "2025-01-15T12:00:00Z"
+                    updated_at: "2025-01-15T12:00:00Z"
+        '200':
+          description: Returned when the feed is already followed by the authenticated user.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+              examples:
+                alreadyFollowed:
+                  summary: Feed already followed
+                  value:
+                    status: "feed already followed"
+        '400':
+          description: Returned when the JSON payload is malformed or input validation fails.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                malformedJson:
+                  summary: Malformed JSON payload
+                  value:
+                    error: "invalid request body"
+                invalidName:
+                  summary: Invalid feed name
+                  value:
+                    error: "invalid feed name"
+        '401':
+          description: Returned when the access token is missing or invalid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                unauthorized:
+                  summary: Unauthorized
+                  value:
+                    error: "unauthorized"
+        '404':
+          description: Returned when the specified feed_id does not exist in the database.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                feedNotFound:
+                  summary: Feed not found
+                  value:
+                    error: "feed not found"
+        '500':
+          description: Returned when context lookup fails or an unexpected database error occurs.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                databaseFailure:
+                  summary: Database failure
+                  value:
+                    error: "something went wrong"
+                missingContext:
+                  summary: Missing user ID in context
+                  value:
+                    error: "missing user id in context"
 components:
   schemas:
     User:
@@ -839,6 +1000,22 @@ components:
         - user_name
         - created_at
         - updated_at
+    
+    FollowFeedRequest:
+      type: object
+      properties:
+        feed_id:
+          type: string
+          format: uuid
+          description: The UUID of the feed to follow.
+        name:
+          type: string
+          minLength: 1
+          maxLength: 45
+          description: Custom label for the feed follow.
+      required:
+        - feed_id
+        - name
 
   securitySchemes:
     bearerAuth:
