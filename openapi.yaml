@@ -6,6 +6,15 @@ info:
 servers:
   - url: https://example.com
 
+
+tags:
+  - name: Authentication & Users
+    description: Registration, login, token rotation, and profile management
+  - name: Feeds
+    description: RSS feed management and subscriptions
+  - name: Posts
+    description: Posts from followed feeds and read-state tracking
+
 paths:
   /api/v1/register:
     post:
@@ -156,10 +165,10 @@ paths:
                 $ref: '#/components/schemas/TokenPair'
               examples:
                 successfulRefresh:
-                  summary: tokens resfreshed successfully
+                  summary: tokens refreshed successfully
                   value:
-                    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-                    "refresh_token": "3a7b18e4-84bf-4dc7-b248-cb5897c5f899"
+                    access_token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                    refresh_token: "3a7b18e4-84bf-4dc7-b248-cb5897c5f899"
         '400':
           description: Returned when the `Authorization` header is missing, malformed, or does not contain a Bearer token.
           content:
@@ -205,7 +214,7 @@ paths:
         - refreshTokenAuth: []
       responses:
         '204':
-          description: Returned when the refresh token has been successfully revoked. No response body is returned.
+          description: Returned when the refresh token has been successfully revoked.
         '400':
           description: Returned when the `Authorization` header is missing, malformed, or does not contain a Bearer token.
           content:
@@ -225,7 +234,7 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
               examples:  
                 tokenRevocationFailed:
-                  summary: token revokation failed
+                  summary: token revocation failed
                   value:
                     error: "failed to revoke token" 
 # ---------------------------------------------------------------
@@ -254,26 +263,26 @@ paths:
                     created_at: "2025-01-15T10:30:00Z"
                     updated_at: "2025-01-15T10:30:00Z"
         '401':
-            description: Returned by the auth middleware when the access token is missing, expired, or invalid.
-            content:
-              application/json:
-                schema:
-                  $ref: '#/components/schemas/ErrorResponse'
-                examples:  
-                  authTokenInvalid:
-                    summary: token missing, expired or invalid
-                    value:
+          description: Returned by the auth middleware when the access token is missing, expired, or invalid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:  
+                authTokenInvalid:
+                  summary: token missing, expired or invalid
+                  value:
                       error: "invalid access token"
         '404':
-            description: Returned when the authenticated user ID does not match any record in the database.
-            content:
-              application/json:
-                schema:
-                  $ref: '#/components/schemas/ErrorResponse'
-                examples:  
-                  userIDNotFound:
-                    summary: authenticated user ID has no matching record
-                    value:
+          description: Returned when the authenticated user ID does not match any record in the database.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:  
+                userIDNotFound:
+                  summary: authenticated user ID has no matching record
+                  value:
                       error: "user not found"
         '500':
           description: Returned when an internal server error occurs (such as a database failure or missing context).
@@ -386,7 +395,7 @@ paths:
         - bearerAuth: []
       responses:
         '204':
-          description: Returned when the user account is successfully deleted. No response body is returned.
+          description: Returned when the user account is successfully deleted.
         '401':
           description: Returned by auth middleware when the access token is missing, expired, or invalid.
           content:
@@ -697,6 +706,20 @@ paths:
                   feed_id: "e4b01140-5b5c-4f9e-9764-77a83d7cb45d"
                   name: "My Favorite Tech Blog"
       responses:
+        '200':
+          description: Returned when the feed is already followed by the authenticated user.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+              examples:
+                alreadyFollowed:
+                  summary: Feed already followed
+                  value:
+                    status: "feed already followed"
         '201':
           description: Returned when the feed is successfully followed for the first time.
           content:
@@ -714,20 +737,6 @@ paths:
                     user_name: "Jane Doe"
                     created_at: "2025-01-15T12:00:00Z"
                     updated_at: "2025-01-15T12:00:00Z"
-        '200':
-          description: Returned when the feed is already followed by the authenticated user.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-              examples:
-                alreadyFollowed:
-                  summary: Feed already followed
-                  value:
-                    status: "feed already followed"
         '400':
           description: Returned when the JSON payload is malformed or input validation fails.
           content:
@@ -1084,6 +1093,8 @@ components:
         - id
         - name
         - email
+        - created_at
+        - updated_at
 
     Feed:
       type: object
@@ -1128,6 +1139,7 @@ components:
           format: uri
         description:
           type: string
+          nullable: true
         feed_id:
           type: string
           format: uuid
@@ -1140,6 +1152,7 @@ components:
         published_at:
           type: string
           format: date-time
+          nullable: true
       required:
         - id
         - title
@@ -1173,6 +1186,7 @@ components:
         email:
           type: string
           format: email
+          minLength: 1
           maxLength: 50
         password:
           type: string
@@ -1190,6 +1204,7 @@ components:
         email:
           type: string
           format: email
+          minLength: 1
           maxLength: 50
         password:
           type: string
@@ -1221,6 +1236,8 @@ components:
                 type: string
               message:
                 type: string
+      required:
+        - errors
 
     AuthResponse:
       allOf:
@@ -1251,6 +1268,7 @@ components:
         email:
           type: string
           format: email
+          minLength: 1
           maxLength: 50
           description: New email address (must be unique)
         password:
