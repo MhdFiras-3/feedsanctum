@@ -849,6 +849,75 @@ paths:
                   value:
                     error: "missing user id in context"
 # --------------------------------------------------------------- 
+  /api/v1/posts:
+    get:
+      summary: Retrieves posts from all feeds currently followed by the authenticated user, ordered by publication date descending.
+      operationId: listPosts
+      tags:
+        - Posts
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          description: Maximum number of posts to return. Defaults to a preset limit if omitted or invalid.
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: Returned with a JSON array of posts. Returns an empty array if no posts are found.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Post'
+              examples:
+                postsList:
+                  summary: One post returned
+                  value:
+                    - id: "2b992f9d-5a7e-4008-8e69-0df854e7c7e1"
+                      title: "Why Go instead of Python for backend systems"
+                      url: "https://exampletech.com/posts/why-go/"
+                      description: "A deep dive into concurrency, memory management, and typing in Go."
+                      feed_id: "e4b01140-5b5c-4f9e-9764-77a83d7cb45d"
+                      created_at: "2025-01-15T12:00:00Z"
+                      updated_at: "2025-01-15T12:00:00Z"
+                      published_at: "2025-01-15T10:00:00Z"
+                emptyList:
+                  summary: No posts found
+                  value: []
+        '401':
+          description: Returned when the access token is missing or invalid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                authTokenInvalid:
+                  summary: Token missing or invalid
+                  value:
+                    error: "invalid access token"
+        '500':
+          description: Returned when context lookup fails or a database query error occurs.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                databaseFailure:
+                  summary: Database query failed
+                  value:
+                    error: "failed to get posts"
+                missingContext:
+                  summary: Missing user ID in context
+                  value:
+                    error: "missing user id in context"
+# --------------------------------------------------------------- 
+
+
 components:
   schemas:
     User:
@@ -902,6 +971,53 @@ components:
         - created_at
         - updated_at
         - last_fetched_at
+
+    Post:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        url:
+          type: string
+          format: uri
+        description:
+          type: string
+        feed_id:
+          type: string
+          format: uuid
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        published_at:
+          type: string
+          format: date-time
+      required:
+        - id
+        - title
+        - url
+        - description
+        - feed_id
+        - created_at
+        - updated_at
+        - published_at
+
+    ReadPost:
+      allOf:
+        - $ref: '#/components/schemas/Post'
+        - type: object
+          properties:
+            read_at:
+              type: string
+              format: date-time
+              description: Timestamp when the user marked this post as read.
+          required:
+            - read_at
         
     RegisterRequest:
       type: object
