@@ -1076,7 +1076,7 @@ Returned when context lookup fails or a database query error occurs.
 
 ### Mark Post as Read
 
-Marks a specific post as read by the authenticated user. This operation is idempotent; if the post is already marked as read, it returns a `200 OK` status confirming the existing state.
+Marks a specific post as read by the authenticated user. This operation is idempotent, if the post is already marked as read, it returns a `200 OK` status confirming the existing state.
 
 * **URL:** `/api/v1/posts/{postID}/read`
 * **Method:** `POST`

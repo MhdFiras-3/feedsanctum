@@ -916,6 +916,91 @@ paths:
                   value:
                     error: "missing user id in context"
 # --------------------------------------------------------------- 
+  /api/v1/posts/{postID}/read:
+    post:
+      summary: Marks a specific post as read by the authenticated user.
+      operationId: markPostRead
+      tags:
+        - Posts
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: postID
+          in: path
+          required: true
+          description: The UUID of the post to mark as read.
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Returned when the post is successfully marked as read or was previously marked as read.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+              examples:
+                markedForFirstTime:
+                  summary: Post marked as read for the first time
+                  value:
+                    status: "post marked as read"
+                alreadyMarked:
+                  summary: Post was already marked as read
+                  value:
+                    status: "post already marked as read"
+        '400':
+          description: Returned when the postID URL parameter is not a valid UUID format.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalidPostID:
+                  summary: Invalid post ID format
+                  value:
+                    error: "invalid post id"
+        '401':
+          description: Returned when the access token is missing or invalid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                authTokenInvalid:
+                  summary: Token missing or invalid
+                  value:
+                    error: "invalid access token"
+        '404':
+          description: Returned when the specified postID does not exist in the database.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                postNotFound:
+                  summary: Post not found
+                  value:
+                    error: "post not found"
+        '500':
+          description: Returned when context lookup fails or a database error occurs while marking the post as read.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                databaseFailure:
+                  summary: Database error
+                  value:
+                    error: "failed to mark post read"
+                missingContext:
+                  summary: Missing user ID in context
+                  value:
+                    error: "missing user id in context"
+# --------------------------------------------------------------- 
+
 
 
 components:
