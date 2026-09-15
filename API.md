@@ -461,11 +461,26 @@ Returned when attempting to update to an email address that is already registere
 ```
 
 ##### `500 Internal Server Error`
-Returned on internal server errors, context lookup issues, or database failures.
+Returned on internal server errors, context lookup issues, database failures, or hashing failure.
 
+*Database Failure:*
 ```json
 {
   "error": "something went wrong"
+}
+```
+
+*Password Hashing Failure:*
+```json
+{
+  "error": "failed to hash password"
+}
+```
+
+*Context Lookup Failure:*
+```json
+{
+  "error": "missing user id in context"
 }
 ```
 

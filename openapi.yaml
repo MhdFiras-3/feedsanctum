@@ -5,6 +5,9 @@ info:
   version: 1.0.0
 servers:
   - url: https://example.com
+    description: Production placeholder
+  - url: http://localhost:8081
+    description: Local development
 
 
 tags:
