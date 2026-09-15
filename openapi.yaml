@@ -317,11 +317,24 @@ paths:
             schema:
               $ref: '#/components/schemas/UpdateUserRequest'
             examples:
-              partialUpdate:
-                summary: Update name and email
+              updateNameOnly:
+                summary: Update name only
+                value:
+                  name: "Jane Smith"
+              updateEmailOnly:
+                summary: Update email only
+                value:
+                  email: "janesmith@example.com"
+              updatePasswordOnly:
+                summary: Update password only
+                value:
+                  password: "a very long and secure password"
+              updateAll:
+                summary: Update all fields
                 value:
                   name: "Jane Smith"
                   email: "janesmith@example.com"
+                  password: "a very long and secure password"
       responses:
         '200':
           description: Returned when user details are successfully updated.
@@ -353,9 +366,17 @@ paths:
                   value:
                     error: "no fields to update"
                 invalidName:
-                  summary: Input validation failed
+                  summary: Invalid name
                   value:
                     error: "invalid name"
+                invalidEmail:
+                  summary: Invalid email
+                  value:
+                    error: "invalid email"
+                invalidPassword:
+                  summary: Invalid password
+                  value:
+                    error: "invalid password"
         '401':
           description: Returned when the access token is missing or invalid.
           content:
@@ -389,6 +410,14 @@ paths:
                   summary: Internal server error
                   value:
                     error: "something went wrong"
+                hashFailure:
+                  summary: Password hashing failed
+                  value:
+                    error: "failed to hash password"
+                missingContext:
+                  summary: Missing user ID in context
+                  value:
+                    error: "missing user id in context"
     delete:
       summary: Deletes the authenticated user's account and associated data from the system.
       operationId: deleteCurrentUser
