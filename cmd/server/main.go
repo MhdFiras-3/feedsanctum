@@ -60,6 +60,13 @@ func main() {
 		AllowCredentials: false,
 		MaxAge:           300,
 	}))
+	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
+		if err := dbConnection.PingContext(r.Context()); err != nil {
+			http.Error(w, "db down", http.StatusServiceUnavailable)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+	})
 	r.Route("/api/v1", func(r chi.Router) {
 		r.Post("/register", apicfg.HandlerCreateUser)
 		r.Post("/login", apicfg.HandlerLogin)
