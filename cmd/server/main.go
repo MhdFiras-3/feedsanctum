@@ -17,6 +17,7 @@ import (
 	"github.com/MhdFiras-3/gofeed/internal/scraper"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/cors"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 )
@@ -52,6 +53,13 @@ func main() {
 
 	r := chi.NewRouter()
 
+	r.Use(cors.Handler(cors.Options{
+		AllowedOrigins:   []string{"http://localhost:8080"},
+		AllowedMethods:   []string{"GET", "POST", "PATCH", "DELETE"},
+		AllowedHeaders:   []string{"Authorization", "Content-Type"},
+		AllowCredentials: false,
+		MaxAge:           300,
+	}))
 	r.Route("/api/v1", func(r chi.Router) {
 		r.Post("/register", apicfg.HandlerCreateUser)
 		r.Post("/login", apicfg.HandlerLogin)

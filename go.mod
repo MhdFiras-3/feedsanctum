@@ -12,6 +12,7 @@ require (
 
 require (
 	github.com/go-chi/chi/v5 v5.3.1 // indirect
+	github.com/go-chi/cors v1.2.2 // indirect
 	github.com/mfridman/interpolate v0.0.2 // indirect
 	github.com/pressly/goose/v3 v3.27.3 // indirect
 	github.com/sethvargo/go-retry v0.4.0 // indirect
