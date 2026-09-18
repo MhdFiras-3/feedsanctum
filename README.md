@@ -1,12 +1,12 @@
 # gofeed
 
-`gofeed` is a concurrent RSS feed aggregator and RESTful API backend written in Go. It allows users to manage and follow RSS feeds, automatically fetching and saving new posts in the background using Go concurrency primitives.
+`gofeed` is an RSS aggregator and REST API backend written in Go. Beyond CRUD endpoints for users, feeds and subscriptions, it runs a background scraper that fans out across feeds on a timer, handles duplicate posts through Postgres constraints, and tolerates malformed feed dates. Built on Chi, sqlc, goose, and PostgreSQL, with JWT auth, refresh-token rotation, and graceful shutdown.
 
 ---
 
 ## 🌟 Key Features
 
-- **Concurrent Feed Scraping:** Background worker implementation using goroutines, `sync.WaitGroup`, and configurable `time.Ticker` intervals to fetch multiple RSS feeds concurrently.
+- **Concurrent Feed Scraping:** Runs a concurrent scraper that polls feeds on a configurable `time.Ticker` intervals to fetch multiple RSS feeds concurrently.
 - **Feed Parsing:** Parses RSS 2.0 XML structures, unescapes HTML entities, and handles multiple `pubDate` formats (RFC1123, RFC3339, etc.).
 - **Authentication:** User registration and authentication by **Argon2id** password hashing and **JWT** for HTTP authorization.
 - **Transactional DB Operations:** Uses PostgreSQL transactions to ensure atomicity when creating feeds and feed follow and when refreshing access token.
@@ -23,7 +23,6 @@
 - **SQL Code Generation:** [sqlc](https://sqlc.dev/)
 - **Database Migrations:** [goose](https://github.com/pressly/goose)
 - **Password Hashing:** `golang.org/x/crypto/argon2`
-- **Testing:** Standard `testing` package with `httptest`
 
 ---
 
@@ -44,7 +43,7 @@ The `scrapeFeed` background worker prioritizes system resiliency over fail-fast 
 - **Batch Processing:** When parsing a feed with multiple items, a single malformed post or duplicate URL does not abort the batch. Instead, individual errors are logged, the failed post is skipped, and remaining valid posts in the feed are processed and inserted.
 - **Feed Polling Safety:** The feed's `last_fetched_at` timestamp is updated immediately before post insertion. This prevents a persistently broken feed or corrupted post payload from trapping the scraper in an infinite retry loop during subsequent fetch cycles.
 
-### 4. Explicit API Package Facing Structs vs. Embedding Database Models
+### 4. Decoupled API Contracts from Database Models
 Handlers explicitly define custom `requestParam` and `response` struct types rather than directly embedding or exposing `sqlc`-generated database structs:
 - **Encapsulation & Security:** Internal schema details are never inadvertently leaked to clients via JSON serialization.
 - **Decoupled Contracts:** Changes to the underlying database schema or migrations do not directly break external client contracts, allowing independent evolution of the API and database layers.

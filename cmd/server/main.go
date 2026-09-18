@@ -17,6 +17,7 @@ import (
 	"github.com/MhdFiras-3/gofeed/internal/scraper"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
@@ -60,6 +61,8 @@ func main() {
 		AllowCredentials: false,
 		MaxAge:           300,
 	}))
+	r.Use(middleware.RequestID)
+	r.Use(middleware.Logger)
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		if err := dbConnection.PingContext(r.Context()); err != nil {
 			http.Error(w, "db down", http.StatusServiceUnavailable)
