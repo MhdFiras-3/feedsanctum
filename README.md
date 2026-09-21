@@ -4,26 +4,53 @@
 
 ---
 
-## 🌟 Key Features
+## 🚀 Getting Started
 
-- **Concurrent Feed Scraping:** Runs a concurrent scraper that polls feeds on a configurable `time.Ticker` intervals to fetch multiple RSS feeds concurrently.
-- **Feed Parsing:** Parses RSS 2.0 XML structures, unescapes HTML entities, and handles multiple `pubDate` formats (RFC1123, RFC3339, etc.).
-- **Authentication:** User registration and authentication by **Argon2id** password hashing and **JWT** for HTTP authorization.
-- **Transactional DB Operations:** Uses PostgreSQL transactions to ensure atomicity when creating feeds and feed follow and when refreshing access token.
-- **Type-Safe Database Access:** Type-safe SQL query generation using **sqlc** and schema migrations managed via **goose**.
-- **Automated Test Suite:** Integration and unit test suite using `net/http/httptest` with mock servers and isolated database test environments.
+### Prerequisites
 
----
+- [Go](https://go.dev/doc/install) (v1.25 or later)
+- [Docker](https://www.docker.com/) & [Docker Compose](https://docs.docker.com/compose/)
+- [goose](https://github.com/pressly/goose) for database migrations
 
-## 🛠️ Tech Stack
 
-- **Language:** [Go 1.22+](https://go.dev/)
-- **HTTP Router:** [Chi Router](https://github.com/go-chi/chi)
-- **Database:** [PostgreSQL](https://www.postgresql.org/)
-- **SQL Code Generation:** [sqlc](https://sqlc.dev/)
-- **Database Migrations:** [goose](https://github.com/pressly/goose)
-- **Password Hashing:** `golang.org/x/crypto/argon2`
+### Clone & Configure Environment
 
+Clone the repository and create a `.env` file in the root directory:
+
+```bash
+git clone https://github.com/MhdFiras-3/gofeed.git
+cd gofeed
+```
+
+`.env`:
+```env
+PORT=8080
+DB_HOST=localhost
+DB_PORT=5432
+DB_USER=postgres
+DB_PASSWORD=yourpassword
+DB_NAME=gofeed
+TEST_DB_URL=postgres://postgres:yourpassword@localhost:5432/gofeed_test?sslmode=disable
+JWT_SECRET=yoursecret
+DUMMY_HASH='$argon2id$v=19$m=65536,t=1,p=12$LpTO8GOk8ajNAFczIs12uQ$e48btjY28JEWiIfEDYcJBjb1GLBZGqXoOyrClQ9EIr0'
+```
+
+
+Start PostgreSQL Container:
+
+```bash
+docker compose up -d
+```
+Apply schema migrations using goose and run the API server:
+```bash
+goose -dir sql/migrations postgres "postgres://postgres:yourpassword@localhost:5432/gofeed?sslmode=disable" up
+go run cmd/server/main.go
+```
+To run tests:
+```bash
+go test -p 1 ./...
+```
+*Note:* -p 1 runs packages sequentially. The shared test database doesn't support parallel packages.
 ---
 
 ## 📐 Key Design Decisions & Trade-Offs
@@ -64,54 +91,31 @@ graph TD
         Scraper -->|Insert New Posts| DB
     end
 ```
+
 ---
 
-## 🚀 Getting Started
+## 🌟 Key Features
 
-### Prerequisites
+- **Concurrent Feed Scraping:** Runs a concurrent scraper that polls feeds on a configurable `time.Ticker` interval to fetch multiple RSS feeds concurrently.
+- **Feed Parsing:** Parses RSS 2.0 XML structures, unescapes HTML entities, and handles multiple `pubDate` formats (RFC1123, RFC3339, etc.).
+- **Authentication:** User registration and authentication by **Argon2id** password hashing and **JWT** for HTTP authorization.
+- **Transactional DB Operations:** Uses PostgreSQL transactions to ensure atomicity when creating feeds and feed follow and when refreshing access token.
+- **Type-Safe Database Access:** Type-safe SQL query generation using **sqlc** and schema migrations managed via **goose**.
+- **Integration Test Suite:** Test running migrations against an isolated Postgres instance via **goose**, with coverage of the scraper logic, JWT auth middleware, and the create feed handler.
 
-- [Go](https://go.dev/doc/install) (v1.21 or later)
-- [Docker](https://www.docker.com/) & [Docker Compose](https://docs.docker.com/compose/)
-- [goose](https://github.com/pressly/goose) for database migrations
+---
 
+## 🛠️ Tech Stack
 
-### Clone & Configure Environment
+- **Language:** [Go 1.25](https://go.dev/)
+- **HTTP Router:** [Chi Router](https://github.com/go-chi/chi)
+- **Database:** [PostgreSQL](https://www.postgresql.org/)
+- **SQL Code Generation:** [sqlc](https://sqlc.dev/)
+- **Database Migrations:** [goose](https://github.com/pressly/goose)
+- **Password Hashing:** `golang.org/x/crypto/argon2`
+- **OpenAPI/Swagger UI**
+- **Docker**
 
-Clone the repository and create a `.env` file in the root directory:
-
-```bash
-git clone https://github.com/MhdFiras-3/gofeed.git
-cd gofeed
-```
-
-`.env`:
-```env
-PORT=8080
-DB_HOST=localhost
-DB_PORT=5432
-DB_USER=postgres
-DB_PASSWORD=yourpassword
-DB_NAME=gofeed
-TEST_DB_URL=postgres://postgres:yourpassword@localhost:5432/gofeed_test?sslmode=disable
-JWT_SECRET=yoursecret
-DUMMY_HASH="$argon2id$v=19$m=65536,t=1,p=12$LpTO8GOk8ajNAFczIs12uQ$e48btjY28JEWiIfEDYcJBjb1GLBZGqXoOyrClQ9EIr0"
-```
-
-
-Start PostgreSQL Container:
-
-```bash
-docker compose up -d
-```
-Apply schema migrations using goose and run the API server:
-```bash
-goose -dir sql/migrations postgres "postgres://postgres:yourpassword@localhost:5432/gofeed?sslmode=disable" up
-go run cmd/server/main.go
-```
-To run tests:
-```bash
-go test -p 1 ./...
-```
 ---
 
 ## API Endpoints Summary
@@ -120,8 +124,8 @@ go test -p 1 ./...
 | :--- | :--- | :--- |
 | `POST` | `/api/v1/register` | Register a new user account |
 | `POST` | `/api/v1/login` | Authenticate user and receive JWT access token |
-| `POST` | `/api/v1/refresh` | Refresh access token using refresh token |
-| `POST` | `/api/v1/logout` | Revoke refresh token / logout |
+| `POST` | `/api/v1/refresh` | Rotate Refresh token and issue new access token |
+| `POST` | `/api/v1/logout` | Revoke refresh token |
 | `GET` | `/api/v1/feeds` | Get all created RSS feeds |
 | `GET` | `/api/v1/feeds/{feedID}` | Get a specific RSS feed by ID |
 
@@ -133,6 +137,7 @@ go test -p 1 ./...
 | `DELETE` | `/api/v1/me` | Delete current user account |
 | `POST` | `/api/v1/feeds` | Create a new RSS feed and automatically follow it |
 | `GET` | `/api/v1/follows` | Get all feed follows for current user |
+| `POST` | `/api/v1/follows` | Follow a feed |
 | `DELETE` | `/api/v1/follows/{feedID}` | Unfollow a feed by ID |
 | `GET` | `/api/v1/posts` | Fetch RSS posts for followed feeds |
 | `POST` | `/api/v1/posts/{postID}/read` | Mark a specific post as read |
