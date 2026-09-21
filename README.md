@@ -1,4 +1,5 @@
 # gofeed
+[![Tests](https://github.com/MhdFiras-3/gofeed/actions/workflows/test.yml/badge.svg)](https://github.com/MhdFiras-3/gofeed/actions/workflows/test.yml)
 
 `gofeed` is an RSS aggregator and REST API backend written in Go. Beyond CRUD endpoints for users, feeds and subscriptions, it runs a background scraper that fans out across feeds on a timer, handles duplicate posts through Postgres constraints, and tolerates malformed feed dates. Built on Chi, sqlc, goose, and PostgreSQL, with JWT auth, refresh-token rotation, and graceful shutdown.
 
@@ -50,7 +51,8 @@ To run tests:
 ```bash
 go test -p 1 ./...
 ```
-*Note:* -p 1 runs packages sequentially. The shared test database doesn't support parallel packages.
+*Note:-p 1 runs packages sequentially. The shared test database doesn't support parallel packages.*
+
 ---
 
 ## 📐 Key Design Decisions & Trade-Offs
