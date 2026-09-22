@@ -24,8 +24,10 @@ import (
 )
 
 func main() {
-	const port = "8081"
+
 	godotenv.Load()
+
+	port := os.Getenv("PORT")
 
 	dbURL := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable",
 		os.Getenv("DB_USER"),
