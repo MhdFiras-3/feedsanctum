@@ -1,7 +1,9 @@
 # gofeed
 [![Tests](https://github.com/MhdFiras-3/gofeed/actions/workflows/test.yml/badge.svg)](https://github.com/MhdFiras-3/gofeed/actions/workflows/test.yml)
 
-`gofeed` is an RSS aggregator and REST API backend written in Go. Beyond CRUD endpoints for users, feeds and subscriptions, it runs a background scraper that fans out across feeds on a timer, handles duplicate posts through Postgres constraints, and tolerates malformed feed dates. Built on Chi, sqlc, goose, and PostgreSQL, with JWT auth, refresh-token rotation, and graceful shutdown.
+`gofeed` is an RSS aggregator and REST API backend written in Go. Beyond CRUD endpoints for users, feeds, and subscriptions, it runs a background scraper that fans out across feeds on a timer, handles duplicate posts through Postgres constraints, and tolerates malformed feed dates. Built on Chi, sqlc, goose, and PostgreSQL, with JWT auth, refresh-token rotation, and graceful shutdown.
+
+Full OpenAPI 3.0 spec is included. Interactive reference is served at http://localhost:8080 when run locally via Docker Compose.
 
 ---
 
@@ -25,7 +27,7 @@ cd gofeed
 
 `.env`:
 ```env
-PORT=8080
+PORT=8081
 DB_HOST=localhost
 DB_PORT=5432
 DB_USER=postgres
@@ -37,21 +39,28 @@ DUMMY_HASH='$argon2id$v=19$m=65536,t=1,p=12$LpTO8GOk8ajNAFczIs12uQ$e48btjY28JEWi
 ```
 
 
-Start PostgreSQL Container:
-
+Start PostgreSQL and Swagger UI:
 ```bash
 docker compose up -d
 ```
+Swagger UI is available at http://localhost:8080 once the containers are running.
+
+If you want to run the test suite, create the test database first:
+```bash
+docker compose exec db psql -U postgres -c "CREATE DATABASE gofeed_test;"
+```
+
 Apply schema migrations using goose and run the API server:
 ```bash
 goose -dir sql/migrations postgres "postgres://postgres:yourpassword@localhost:5432/gofeed?sslmode=disable" up
 go run cmd/server/main.go
 ```
+
 To run tests:
 ```bash
 go test -p 1 ./...
 ```
-*Note:-p 1 runs packages sequentially. The shared test database doesn't support parallel packages.*
+**Note:** `-p 1` runs packages sequentially. The shared test database doesn't support parallel packages.
 
 ---
 
@@ -98,12 +107,12 @@ graph TD
 
 ## 🌟 Key Features
 
-- **Concurrent Feed Scraping:** Runs a concurrent scraper that polls feeds on a configurable `time.Ticker` interval to fetch multiple RSS feeds concurrently.
+- **Concurrent Feed Scraping:** Runs a background scraper that polls feeds on a configurable `time.Ticker` interval, fetching multiple RSS feeds concurrently.
 - **Feed Parsing:** Parses RSS 2.0 XML structures, unescapes HTML entities, and handles multiple `pubDate` formats (RFC1123, RFC3339, etc.).
 - **Authentication:** User registration and authentication by **Argon2id** password hashing and **JWT** for HTTP authorization.
-- **Transactional DB Operations:** Uses PostgreSQL transactions to ensure atomicity when creating feeds and feed follow and when refreshing access token.
+- **Transactional DB Operations:** Uses PostgreSQL transactions to guarantee atomicity when creating a feed and its follow row, and when rotating refresh tokens.
 - **Type-Safe Database Access:** Type-safe SQL query generation using **sqlc** and schema migrations managed via **goose**.
-- **Integration Test Suite:** Test running migrations against an isolated Postgres instance via **goose**, with coverage of the scraper logic, JWT auth middleware, and the create feed handler.
+- **Integration Test Suite:** Runs migrations against an isolated Postgres instance via **goose**, with coverage of the scraper logic, JWT auth middleware, and the create feed handler.
 
 ---
 
@@ -115,23 +124,46 @@ graph TD
 - **SQL Code Generation:** [sqlc](https://sqlc.dev/)
 - **Database Migrations:** [goose](https://github.com/pressly/goose)
 - **Password Hashing:** `golang.org/x/crypto/argon2`
-- **OpenAPI/Swagger UI**
-- **Docker**
+- **OpenAPI/Swagger UI:** [OpenAPI 3.0](https://www.openapis.org/) / [Swagger UI](https://swagger.io/tools/swagger-ui/)
+- **Docker:** [Docker](https://www.docker.com/)
 
 ---
 
+## Project Structure
+
+```text
+gofeed/
+├── cmd/
+│   └── server/         # entrypoint
+├── internal/
+│   ├── auth/           # password hashing and tokens creation
+│   ├── database/       # sqlc-generated queries
+│   ├── handlers/       # HTTP handlers and middleware
+│   ├── scraper/        # background feed scraper
+│   └── testingutils/   # shared test suite
+├── sql/
+│   ├── migrations/     # goose migrations
+│   └── queries/        # sqlc source SQL
+├── openapi.yaml
+├── docker-compose.yml
+└── README.md
+```
+
 ## API Endpoints Summary
-#### Public Routes
+
+The full spec is defined in [`openapi.yaml`](./openapi.yaml) and served interactively via Swagger UI.
+
+### Public Routes
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
 | `POST` | `/api/v1/register` | Register a new user account |
 | `POST` | `/api/v1/login` | Authenticate user and receive JWT access token |
-| `POST` | `/api/v1/refresh` | Rotate Refresh token and issue new access token |
+| `POST` | `/api/v1/refresh` | Rotate refresh token and issue new access token |
 | `POST` | `/api/v1/logout` | Revoke refresh token |
-| `GET` | `/api/v1/feeds` | Get all created RSS feeds |
-| `GET` | `/api/v1/feeds/{feedID}` | Get a specific RSS feed by ID |
+| `GET` | `/api/v1/feeds` | List all registered RSS feeds |
+| `GET` | `/api/v1/feeds/{feedID}` | Retrieve a specific RSS feed by ID |
 
-#### Protected Routes
+### Protected Routes
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
 | `GET` | `/api/v1/me` | Retrieve current user profile |
