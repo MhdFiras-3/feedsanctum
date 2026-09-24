@@ -1,6 +1,6 @@
 openapi: 3.0.0
 info:
-  title: gofeed
+  title: feedsanctum
   description: RSS feed aggregator
   version: 1.0.0
 servers:

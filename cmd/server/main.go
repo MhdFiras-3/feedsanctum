@@ -12,9 +12,9 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/MhdFiras-3/gofeed/internal/database"
-	"github.com/MhdFiras-3/gofeed/internal/handlers"
-	"github.com/MhdFiras-3/gofeed/internal/scraper"
+	"github.com/MhdFiras-3/feedsanctum/internal/database"
+	"github.com/MhdFiras-3/feedsanctum/internal/handlers"
+	"github.com/MhdFiras-3/feedsanctum/internal/scraper"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"

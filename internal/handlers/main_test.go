@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/MhdFiras-3/gofeed/internal/testingutils"
+	"github.com/MhdFiras-3/feedsanctum/internal/testingutils"
 	_ "github.com/lib/pq"
 )
 

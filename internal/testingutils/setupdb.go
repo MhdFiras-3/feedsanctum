@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"runtime"
 
-	"github.com/MhdFiras-3/gofeed/internal/database"
+	"github.com/MhdFiras-3/feedsanctum/internal/database"
 	"github.com/joho/godotenv"
 	"github.com/pressly/goose/v3"
 )

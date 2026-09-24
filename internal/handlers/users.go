@@ -10,8 +10,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/MhdFiras-3/gofeed/internal/auth"
-	"github.com/MhdFiras-3/gofeed/internal/database"
+	"github.com/MhdFiras-3/feedsanctum/internal/auth"
+	"github.com/MhdFiras-3/feedsanctum/internal/database"
 	"github.com/google/uuid"
 	"github.com/lib/pq"
 )

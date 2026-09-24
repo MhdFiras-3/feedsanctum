@@ -1,7 +1,7 @@
-# gofeed
-[![Tests](https://github.com/MhdFiras-3/gofeed/actions/workflows/test.yml/badge.svg)](https://github.com/MhdFiras-3/gofeed/actions/workflows/test.yml)
+# FeedSanctum
+[![Tests](https://github.com/MhdFiras-3/feedsanctum/actions/workflows/test.yml/badge.svg)](https://github.com/MhdFiras-3/feedsanctum/actions/workflows/test.yml)
 
-`gofeed` is an RSS aggregator and REST API backend written in Go. Beyond CRUD endpoints for users, feeds, and subscriptions, it runs a background scraper that fans out across feeds on a timer, handles duplicate posts through Postgres constraints, and tolerates malformed feed dates. Built on Chi, sqlc, goose, and PostgreSQL, with JWT auth, refresh-token rotation, and graceful shutdown.
+`FeedSanctum` is an RSS aggregator and REST API backend written in Go. Beyond CRUD endpoints for users, feeds, and subscriptions, it runs a background scraper that fans out across feeds on a timer, handles duplicate posts through Postgres constraints, and tolerates malformed feed dates. Built on Chi, sqlc, goose, and PostgreSQL, with JWT auth, refresh-token rotation, and graceful shutdown.
 
 Full OpenAPI 3.0 spec is included. Interactive reference is served at http://localhost:8080 when run locally via Docker Compose.
 
@@ -21,8 +21,8 @@ Full OpenAPI 3.0 spec is included. Interactive reference is served at http://loc
 Clone the repository and create a `.env` file in the root directory:
 
 ```bash
-git clone https://github.com/MhdFiras-3/gofeed.git
-cd gofeed
+git clone https://github.com/MhdFiras-3/feedsanctum.git
+cd feedsanctum
 ```
 
 `.env`:
@@ -32,8 +32,8 @@ DB_HOST=localhost
 DB_PORT=5432
 DB_USER=postgres
 DB_PASSWORD=yourpassword
-DB_NAME=gofeed
-TEST_DB_URL=postgres://postgres:yourpassword@localhost:5432/gofeed_test?sslmode=disable
+DB_NAME=feedsanctum
+TEST_DB_URL=postgres://postgres:yourpassword@localhost:5432/feedsanctum_test?sslmode=disable
 JWT_SECRET=yoursecret
 DUMMY_HASH='$argon2id$v=19$m=65536,t=1,p=12$LpTO8GOk8ajNAFczIs12uQ$e48btjY28JEWiIfEDYcJBjb1GLBZGqXoOyrClQ9EIr0'
 ```
@@ -47,12 +47,12 @@ Swagger UI is available at http://localhost:8080 once the containers are running
 
 If you want to run the test suite, create the test database first:
 ```bash
-docker compose exec db psql -U postgres -c "CREATE DATABASE gofeed_test;"
+docker compose exec db psql -U postgres -c "CREATE DATABASE feedsanctum_test;"
 ```
 
 Apply schema migrations using goose and run the API server:
 ```bash
-goose -dir sql/migrations postgres "postgres://postgres:yourpassword@localhost:5432/gofeed?sslmode=disable" up
+goose -dir sql/migrations postgres "postgres://postgres:yourpassword@localhost:5432/feedsanctum?sslmode=disable" up
 go run cmd/server/main.go
 ```
 
@@ -132,7 +132,7 @@ graph TD
 ## Project Structure
 
 ```text
-gofeed/
+feedsanctum/
 ├── cmd/
 │   └── server/         # entrypoint
 ├── internal/

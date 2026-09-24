@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/MhdFiras-3/gofeed/internal/database"
+	"github.com/MhdFiras-3/feedsanctum/internal/database"
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"github.com/lib/pq"

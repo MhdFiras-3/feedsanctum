@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"time"
 
-	"github.com/MhdFiras-3/gofeed/internal/database"
+	"github.com/MhdFiras-3/feedsanctum/internal/database"
 )
 
 type APIConfig struct {

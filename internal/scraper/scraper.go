@@ -13,7 +13,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/MhdFiras-3/gofeed/internal/database"
+	"github.com/MhdFiras-3/feedsanctum/internal/database"
 	"github.com/google/uuid"
 	"github.com/lib/pq"
 )
@@ -24,7 +24,7 @@ func fetchFeed(ctx context.Context, feedURL string) (*RSSFeed, error) {
 		return nil, err
 	}
 
-	req.Header.Set("User-Agent", "gofeed")
+	req.Header.Set("User-Agent", "feedsanctum")
 	client := &http.Client{
 		Timeout: 15 * time.Second,
 	}

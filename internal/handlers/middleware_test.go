@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/MhdFiras-3/gofeed/internal/auth"
+	"github.com/MhdFiras-3/feedsanctum/internal/auth"
 	"github.com/google/uuid"
 )
 

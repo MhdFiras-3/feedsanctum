@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/MhdFiras-3/gofeed/internal/database"
+	"github.com/MhdFiras-3/feedsanctum/internal/database"
 	"github.com/google/uuid"
 )
 
