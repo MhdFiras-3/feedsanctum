@@ -1,4 +1,21 @@
 services:
+  api:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      - db:
+        conditon: service_healthy
+    environment:
+      PORT: "8080"
+      DB_HOST: db
+      DB_PORT: "5432"
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      JWT_SECRET: ${JWT_SECRET}
+    ports:
+      - "8081:8080"
+  
   db:
     image: postgres:16
     restart: unless-stopped
