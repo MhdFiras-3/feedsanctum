@@ -51,7 +51,7 @@ func main() {
 		DBConn:    dbConnection,
 		JWTSecret: os.Getenv("JWT_SECRET"),
 		JWTExpiry: time.Hour,
-		Ticker:    10 * time.Second,
+		Ticker:    time.Hour,
 	}
 
 	r := chi.NewRouter()
