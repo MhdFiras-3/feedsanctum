@@ -13,8 +13,10 @@ import (
 	"time"
 
 	"github.com/MhdFiras-3/feedsanctum/internal/database"
+	"github.com/MhdFiras-3/feedsanctum/internal/docs"
 	"github.com/MhdFiras-3/feedsanctum/internal/handlers"
 	"github.com/MhdFiras-3/feedsanctum/internal/scraper"
+	swgui "github.com/swaggest/swgui/v5emb"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -56,6 +58,9 @@ func main() {
 
 	r := chi.NewRouter()
 
+	r.Get("/openapi.yaml", docs.HandleSpec)
+	r.Mount("/docs", swgui.New("FeedSanctum API", "/openapi.yaml", "/docs"))
+
 	r.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   []string{"http://localhost:8080"},
 		AllowedMethods:   []string{"GET", "POST", "PATCH", "DELETE"},
@@ -65,6 +70,7 @@ func main() {
 	}))
 	r.Use(middleware.RequestID)
 	r.Use(middleware.Logger)
+
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		if err := dbConnection.PingContext(r.Context()); err != nil {
 			http.Error(w, "db down", http.StatusServiceUnavailable)
