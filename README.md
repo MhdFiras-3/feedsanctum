@@ -1,9 +1,9 @@
 # FeedSanctum
 [![Tests](https://github.com/MhdFiras-3/feedsanctum/actions/workflows/test.yml/badge.svg)](https://github.com/MhdFiras-3/feedsanctum/actions/workflows/test.yml)
 
-`FeedSanctum` is an RSS aggregator and REST API backend written in Go. Beyond CRUD endpoints for users, feeds, and subscriptions, it runs a background scraper that fans out across feeds on a timer, handles duplicate posts through Postgres constraints, and tolerates malformed feed dates. Built on Chi, sqlc, goose, and PostgreSQL, with JWT auth, refresh-token rotation, and graceful shutdown.
+FeedSanctum is an RSS aggregator and REST API backend written in Go. Beyond CRUD endpoints for users, feeds, and subscriptions, it runs a background scraper that fans out across feeds on a timer, handles duplicate posts through Postgres constraints, and tolerates malformed feed dates. Built on Chi, sqlc, goose, and PostgreSQL, with JWT auth, refresh-token rotation, and graceful shutdown.
 
-Full OpenAPI 3.0 spec is included. Interactive reference is served at http://localhost:8080 when run locally via Docker Compose.
+Full OpenAPI 3.0 spec is included. Interactive reference is served at http://localhost:8081/docs whether run locally with `go run` or in Docker via `docker compose`.
 
 ---
 
@@ -35,15 +35,13 @@ DB_PASSWORD=yourpassword
 DB_NAME=feedsanctum
 TEST_DB_URL=postgres://postgres:yourpassword@localhost:5432/feedsanctum_test?sslmode=disable
 JWT_SECRET=yoursecret
-DUMMY_HASH='$argon2id$v=19$m=65536,t=1,p=12$LpTO8GOk8ajNAFczIs12uQ$e48btjY28JEWiIfEDYcJBjb1GLBZGqXoOyrClQ9EIr0'
 ```
 
 
-Start PostgreSQL and Swagger UI:
+Start PostgreSQL:
 ```bash
 docker compose up -d
 ```
-Swagger UI is available at http://localhost:8080 once the containers are running.
 
 If you want to run the test suite, create the test database first:
 ```bash
@@ -55,12 +53,21 @@ Apply schema migrations using goose and run the API server:
 goose -dir sql/migrations postgres "postgres://postgres:yourpassword@localhost:5432/feedsanctum?sslmode=disable" up
 go run cmd/server/main.go
 ```
+Interactive docs at http://localhost:8081/docs.
 
 To run tests:
 ```bash
 go test -p 1 ./...
 ```
 **Note:** `-p 1` runs packages sequentially. The shared test database doesn't support parallel packages.
+
+---
+
+## API Documentation
+
+Interactive reference is served by the API itself at [`/docs`](http://localhost:8081/docs) — try endpoints directly in the browser.
+
+The full OpenAPI 3.0 spec is embedded in the binary from [`internal/docs/openapi.yaml`](./internal/docs/openapi.yaml).
 
 ---
 
@@ -73,7 +80,7 @@ Multi-step database state changes are wrapped in explicit database transactions:
 
 ### 2. Mitigation of Timing Attacks on Authentication
 A server that immediately returns `401 Unauthorized` when an email does not exist responds significantly faster than when performing an expensive cryptographic hash comparison for an existing user. 
-- To prevent **User Enumeration via Timing Attacks**, `HandlerLogin` executes an Argon2id comparison against a dummy hash (`DUMMY_HASH`) whenever a user lookup returns no rows. 
+- To prevent **User Enumeration via Timing Attacks**, `HandlerLogin` executes an Argon2id comparison against a dummy hash whenever a user lookup returns no rows. 
 - This ensures constant-time response latency regardless of whether an email is registered.
 
 ### 3. Error Handling Trade-Offs in Background Scraping
@@ -136,22 +143,23 @@ feedsanctum/
 ├── cmd/
 │   └── server/         # entrypoint
 ├── internal/
-│   ├── auth/           # password hashing and tokens creation
+│   ├── auth/           # password hashing and token creation
 │   ├── database/       # sqlc-generated queries
+│   ├── docs/           # OpenAPI spec embed
 │   ├── handlers/       # HTTP handlers and middleware
 │   ├── scraper/        # background feed scraper
-│   └── testingutils/   # shared test suite
+│   └── testingutils/   # shared test suite  
 ├── sql/
 │   ├── migrations/     # goose migrations
 │   └── queries/        # sqlc source SQL
-├── openapi.yaml
 ├── docker-compose.yml
 └── README.md
 ```
+---
 
 ## API Endpoints Summary
 
-The full spec is defined in [`openapi.yaml`](./openapi.yaml) and served interactively via Swagger UI.
+The full spec is defined in [`internal/docs/openapi.yaml`](./internal/docs/openapi.yaml) and served interactively via Swagger UI.
 
 ### Public Routes
 | Method | Endpoint | Description |

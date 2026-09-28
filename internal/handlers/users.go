@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/MhdFiras-3/feedsanctum/internal/auth"
@@ -128,6 +127,7 @@ func (cfg *APIConfig) HandlerLogin(w http.ResponseWriter, r *http.Request) {
 		RefreshToken string `json:"refresh_token"`
 	}
 
+	const dummyHash = "$argon2id$v=19$m=65536,t=1,p=12$LpTO8GOk8ajNAFczIs12uQ$e48btjY28JEWiIfEDYcJBjb1GLBZGqXoOyrClQ9EIr0"
 	var reqData requestParam
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&reqData); err != nil {
@@ -136,7 +136,7 @@ func (cfg *APIConfig) HandlerLogin(w http.ResponseWriter, r *http.Request) {
 	}
 	DBUser, err := cfg.DB.GetUserByEmail(r.Context(), reqData.Email)
 	userExists := err == nil
-	hashToValidate := os.Getenv("DUMMY_HASH")
+	hashToValidate := dummyHash
 
 	if userExists {
 		hashToValidate = DBUser.HashedPassword
