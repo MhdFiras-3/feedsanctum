@@ -21,6 +21,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
+	"github.com/go-chi/httprate"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 )
@@ -54,6 +55,9 @@ func main() {
 		JWTSecret: os.Getenv("JWT_SECRET"),
 		JWTExpiry: time.Hour,
 		Ticker:    time.Hour,
+		LoginLimiter: httprate.NewRateLimiter(8, time.Minute, httprate.WithLimitHandler(func(w http.ResponseWriter, r *http.Request) {
+			http.Error(w, `{"error": "login attempts exceeded, please try again later"}`, http.StatusTooManyRequests)
+		})),
 	}
 
 	r := chi.NewRouter()
@@ -71,6 +75,11 @@ func main() {
 	r.Use(middleware.RequestID)
 	r.Use(middleware.Logger)
 
+	r.Use(middleware.ClientIPFromRemoteAddr)
+	r.Use(httprate.LimitBy(60, time.Minute, httprate.JoinKeys(clientIPKey, httprate.KeyByEndpoint), httprate.WithLimitHandler(func(w http.ResponseWriter, r *http.Request) {
+		http.Error(w, `{"error": "Rate limit reached"}`, http.StatusTooManyRequests)
+	})))
+
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		if err := dbConnection.PingContext(r.Context()); err != nil {
 			http.Error(w, "db down", http.StatusServiceUnavailable)
@@ -80,7 +89,9 @@ func main() {
 	})
 	r.Route("/api/v1", func(r chi.Router) {
 		r.Post("/register", apicfg.HandlerCreateUser)
-		r.Post("/login", apicfg.HandlerLogin)
+		r.With(httprate.LimitBy(5, time.Minute, clientIPKey, httprate.WithLimitHandler(func(w http.ResponseWriter, r *http.Request) {
+			http.Error(w, `{"error": "Rate limit reached"}`, http.StatusTooManyRequests)
+		}))).Post("/login", apicfg.HandlerLogin)
 		r.Post("/refresh", apicfg.HandlerRefresh)
 		r.Post("/logout", apicfg.HandlerLogOut)
 		r.Get("/feeds", apicfg.HandlerGetAllFeeds)
@@ -126,4 +137,8 @@ func main() {
 	if err := server.Shutdown(shutdownCtx); err != nil {
 		log.Printf("server forced to shutdown, %v", err)
 	}
+}
+
+func clientIPKey(r *http.Request) (string, error) {
+	return httprate.CanonicalizeIP(middleware.GetClientIP(r.Context())), nil
 }

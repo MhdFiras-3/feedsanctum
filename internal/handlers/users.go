@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/MhdFiras-3/feedsanctum/internal/auth"
@@ -134,6 +135,11 @@ func (cfg *APIConfig) HandlerLogin(w http.ResponseWriter, r *http.Request) {
 		respWithError(w, http.StatusBadRequest, "invalid request payload")
 		return
 	}
+
+	if cfg.LoginLimiter.RespondOnLimit(w, r, strings.ToLower(reqData.Email)) {
+		return
+	}
+
 	DBUser, err := cfg.DB.GetUserByEmail(r.Context(), reqData.Email)
 	userExists := err == nil
 	hashToValidate := dummyHash
