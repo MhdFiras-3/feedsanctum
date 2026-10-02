@@ -50,23 +50,18 @@ func main() {
 	dbQueries := database.New(dbConnection)
 
 	apicfg := &handlers.APIConfig{
-		DB:        dbQueries,
-		DBConn:    dbConnection,
-		JWTSecret: os.Getenv("JWT_SECRET"),
-		JWTExpiry: time.Hour,
-		Ticker:    time.Hour,
-		LoginLimiter: httprate.NewRateLimiter(8, time.Minute, httprate.WithLimitHandler(func(w http.ResponseWriter, r *http.Request) {
-			http.Error(w, `{"error": "login attempts exceeded, please try again later"}`, http.StatusTooManyRequests)
-		})),
+		DB:           dbQueries,
+		DBConn:       dbConnection,
+		JWTSecret:    os.Getenv("JWT_SECRET"),
+		JWTExpiry:    time.Hour,
+		Ticker:       time.Hour,
+		LoginLimiter: httprate.NewRateLimiter(8, time.Minute, httprate.WithLimitHandler(rateLimitErrHandler)),
 	}
 
 	r := chi.NewRouter()
 
-	r.Get("/openapi.yaml", docs.HandleSpec)
-	r.Mount("/docs", swgui.New("FeedSanctum API", "/openapi.yaml", "/docs"))
-
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:8080"},
+		AllowedOrigins:   []string{"*"},
 		AllowedMethods:   []string{"GET", "POST", "PATCH", "DELETE"},
 		AllowedHeaders:   []string{"Authorization", "Content-Type"},
 		AllowCredentials: false,
@@ -76,9 +71,8 @@ func main() {
 	r.Use(middleware.Logger)
 
 	r.Use(middleware.ClientIPFromRemoteAddr)
-	r.Use(httprate.LimitBy(60, time.Minute, httprate.JoinKeys(clientIPKey, httprate.KeyByEndpoint), httprate.WithLimitHandler(func(w http.ResponseWriter, r *http.Request) {
-		http.Error(w, `{"error": "Rate limit reached"}`, http.StatusTooManyRequests)
-	})))
+	r.Use(httprate.LimitBy(60, time.Minute, httprate.JoinKeys(clientIPKey, httprate.KeyByEndpoint),
+		httprate.WithLimitHandler(rateLimitErrHandler)))
 
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		if err := dbConnection.PingContext(r.Context()); err != nil {
@@ -89,9 +83,7 @@ func main() {
 	})
 	r.Route("/api/v1", func(r chi.Router) {
 		r.Post("/register", apicfg.HandlerCreateUser)
-		r.With(httprate.LimitBy(5, time.Minute, clientIPKey, httprate.WithLimitHandler(func(w http.ResponseWriter, r *http.Request) {
-			http.Error(w, `{"error": "Rate limit reached"}`, http.StatusTooManyRequests)
-		}))).Post("/login", apicfg.HandlerLogin)
+		r.With(httprate.LimitBy(5, time.Minute, clientIPKey, httprate.WithLimitHandler(rateLimitErrHandler))).Post("/login", apicfg.HandlerLogin)
 		r.Post("/refresh", apicfg.HandlerRefresh)
 		r.Post("/logout", apicfg.HandlerLogOut)
 		r.Get("/feeds", apicfg.HandlerGetAllFeeds)
@@ -112,6 +104,9 @@ func main() {
 		})
 
 	})
+
+	r.Get("/openapi.yaml", docs.HandleSpec)
+	r.Mount("/docs", swgui.New("FeedSanctum API", "/openapi.yaml", "/docs"))
 
 	server := &http.Server{
 		Addr:         ":" + port,
@@ -141,4 +136,10 @@ func main() {
 
 func clientIPKey(r *http.Request) (string, error) {
 	return httprate.CanonicalizeIP(middleware.GetClientIP(r.Context())), nil
+}
+
+func rateLimitErrHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusTooManyRequests)
+	w.Write([]byte(`{"error": "Rate limit reached"}`))
 }
