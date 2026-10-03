@@ -94,6 +94,11 @@ Handlers explicitly define custom `requestParam` and `response` struct types rat
 - **Decoupled Contracts:** Changes to the underlying database schema or migrations do not directly break external client contracts, allowing independent evolution of the API and database layers.
 - **Null-Value Handling:** Custom response types map `sql.NullString` and `sql.NullTime` into clean nullable JSON primitives (e.g., `*string`, `*time.Time`) rather than exposing raw database struct types to the caller.
 
+### 5. Layered Rate Limiting for Authentication
+- **Global per-IP+endpoint (60/min):** blunts general abuse and scripted scraping.
+- **Route-level per-IP on `/login` (5/min):** caps single-source brute force attempts.
+- **In-handler per-email on `/login` (8/min):** stops distributed attempts against one account, where each IP stays under its own limit but the target account receives hundreds of attempts.
+
 ---
 
 ## 🏗️ System Architecture
@@ -120,6 +125,7 @@ graph TD
 - **Transactional DB Operations:** Uses PostgreSQL transactions to guarantee atomicity when creating a feed and its follow row, and when rotating refresh tokens.
 - **Type-Safe Database Access:** Type-safe SQL query generation using **sqlc** and schema migrations managed via **goose**.
 - **Integration Test Suite:** Runs migrations against an isolated Postgres instance via **goose**, with coverage of the scraper logic, JWT auth middleware, and the create feed handler.
+- **Multi-Layer Rate Limiting:** Per-IP+endpoint global limits, stricter per-IP limits on authentication, and per-email.
 
 ---
 
@@ -127,6 +133,7 @@ graph TD
 
 - **Language:** [Go 1.25](https://go.dev/)
 - **HTTP Router:** [Chi Router](https://github.com/go-chi/chi)
+- **Rate Limiting:** [httprate](https://github.com/go-chi/httprate)
 - **Database:** [PostgreSQL](https://www.postgresql.org/)
 - **SQL Code Generation:** [sqlc](https://sqlc.dev/)
 - **Database Migrations:** [goose](https://github.com/pressly/goose)

@@ -70,6 +70,8 @@ paths:
                   summary: Duplicate email
                   value:
                     error: "email already registered"
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
         '500':
           description: Returned when an unhandled server error occurs (e.g., password hashing failure or database connection failure).
           content:
@@ -134,7 +136,8 @@ paths:
                   summary: wrong email or password
                   value:
                     error: "wrong email or password"
-
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
         '500':
           description: Returned when token generation fails or database token storage fails.
           content:
@@ -194,7 +197,8 @@ paths:
                   summary: failed to find token
                   value:
                     error: "failed to find token"
-
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
         '500':
           description: Returned when token generation, rotation, or database storage fails.
           content:
@@ -229,6 +233,8 @@ paths:
                   summary: missing header,malformed or empty
                   value:
                     error: "failed to get bearer token"
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
         '500':
           description: Returned when a database error occurs while revoking the token.
           content:
@@ -287,6 +293,8 @@ paths:
                   summary: authenticated user ID has no matching record
                   value:
                       error: "user not found"
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
         '500':
           description: Returned when an internal server error occurs (such as a database failure or missing context).
           content:
@@ -399,6 +407,8 @@ paths:
                   summary: Duplicate email
                   value:
                     error: "email already registered"
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
         '500':
           description: Returned on internal server errors, context lookup issues, or database failures.
           content:
@@ -439,6 +449,8 @@ paths:
                   summary: Token missing, expired, or invalid
                   value:
                     error: "invalid access token"
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
         '500':
           description: Returned when an error occurs while deleting the user from the database or retrieving context.
           content:
@@ -489,6 +501,8 @@ paths:
                 emptyList:
                   summary: No feeds registered
                   value: []
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
         '500':
           description: Returned when a database error occurs while fetching feeds.
           content:
@@ -579,6 +593,8 @@ paths:
                   summary: Feed URL already registered
                   value:
                     error: "feed already registered"
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
         '500':
           description: Returned when context lookup fails or a database transaction error occurs.
           content:
@@ -648,6 +664,8 @@ paths:
                   summary: Feed not found
                   value:
                     error: "no such feed found"
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
         '500':
           description: Returned when a database error occurs while fetching the feed.
           content:
@@ -702,6 +720,8 @@ paths:
                   summary: Token missing or invalid
                   value:
                     error: "invalid access token"
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
         '500':
           description: Returned when context lookup fails or a database error occurs while fetching follows.
           content:
@@ -806,6 +826,8 @@ paths:
                   summary: Feed not found
                   value:
                     error: "feed not found"
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
         '500':
           description: Returned when context lookup fails or an unexpected database error occurs.
           content:
@@ -874,6 +896,8 @@ paths:
                   summary: Feed follow not found
                   value:
                     error: "no such feed follow found"
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
         '500':
           description: Returned when context lookup fails or a database error occurs while deleting the follow.
           content:
@@ -941,6 +965,8 @@ paths:
                   summary: Token missing or invalid
                   value:
                     error: "invalid access token"
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
         '500':
           description: Returned when context lookup fails or a database query error occurs.
           content:
@@ -1025,6 +1051,8 @@ paths:
                   summary: Post not found
                   value:
                     error: "post not found"
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
         '500':
           description: Returned when context lookup fails or a database error occurs while marking the post as read.
           content:
@@ -1085,6 +1113,8 @@ paths:
                   summary: Token missing or invalid
                   value:
                     error: "invalid access token"
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
         '500':
           description: Returned when context lookup fails or a database query error occurs.
           content:
@@ -1394,6 +1424,23 @@ components:
       required:
         - feed_id
         - name
+
+    responses:
+      RateLimitExceeded:
+        description: Returned when the client exceeds the allowed request rate.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ErrorResponse'
+            examples:
+              ipLimitExceeded:
+                summary: Too many requests from this IP
+                value:
+                  error: "Rate limit reached"
+              loginAttemptsExceeded:
+                summary: Too many login attempts for this email
+                value:
+                  error: "login attempts exceeded, please try again later"
 
   securitySchemes:
     bearerAuth:

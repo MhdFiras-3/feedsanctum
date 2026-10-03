@@ -1,4 +1,5 @@
 # API Documentation
+> **Interactive reference:** [http://localhost:8081/docs](http://localhost:8081/docs) (local)
 
 ## Endpoints Summary
 
@@ -30,6 +31,22 @@
 | `POST` | [`/api/v1/posts/{postID}/read`](#mark-post-as-read) | Mark a specific post as read for the user | Yes (Access Token) |
 | `GET` | [`/api/v1/posts/read`](#get-read-posts-for-user) | Retrieve all posts marked as read by the user | Yes (Access Token) |
 
+## Rate Limiting
+
+All endpoints are rate-limited by client IP and endpoint path. Authentication endpoints have additional protection:
+
+| Scope | Limit | Window |
+| :--- | :--- | :--- |
+| All endpoints (per IP + endpoint) | 60 requests | 1 minute |
+| `POST /api/v1/login` (per IP) | 5 requests | 1 minute |
+| `POST /api/v1/login` (per email) | 8 requests | 1 minute |
+
+Exceeding any limit returns:
+
+#### `429 Too Many Requests`
+```json
+{ "error": "Rate limit reached" }
+```
 ---
 
 ## Authentication & Users
