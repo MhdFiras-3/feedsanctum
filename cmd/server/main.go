@@ -52,6 +52,8 @@ func main() {
 
 	dbQueries := database.New(dbConnection)
 
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
 	apicfg := &handlers.APIConfig{
 		DB:           dbQueries,
 		DBConn:       dbConnection,
@@ -59,6 +61,7 @@ func main() {
 		JWTExpiry:    time.Hour,
 		Ticker:       time.Hour,
 		LoginLimiter: httprate.NewRateLimiter(8, time.Minute, httprate.WithLimitHandler(rateLimitErrHandler)),
+		ServerCTX:    ctx,
 	}
 
 	r := chi.NewRouter()
@@ -117,8 +120,7 @@ func main() {
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 10 * time.Second,
 	}
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
-	defer stop()
+
 	go scraper.StartScraping(ctx, apicfg.DB, apicfg.Ticker)
 	go func() {
 		fmt.Printf("serving on %s\n", port)

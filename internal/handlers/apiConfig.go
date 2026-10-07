@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"database/sql"
 	"time"
 
@@ -15,4 +16,5 @@ type APIConfig struct {
 	JWTExpiry    time.Duration
 	Ticker       time.Duration
 	LoginLimiter *httprate.RateLimiter
+	ServerCTX    context.Context
 }

@@ -18,7 +18,7 @@ import (
 
 type contextIDKey string
 
-const userIDKey contextIDKey = "userID"
+const UserIDKey contextIDKey = "userID"
 
 type UserLoginData struct {
 	Email    string `json:"email"`
@@ -235,13 +235,13 @@ func (cfg *APIConfig) MiddlewareAuth(next http.Handler) http.Handler {
 			return
 
 		}
-		ctx := context.WithValue(r.Context(), userIDKey, id)
+		ctx := context.WithValue(r.Context(), UserIDKey, id)
 		r = r.WithContext(ctx)
 		next.ServeHTTP(w, r)
 	})
 }
 func (cfg *APIConfig) HandlerGetCurrentUser(w http.ResponseWriter, r *http.Request) {
-	id, ok := r.Context().Value(userIDKey).(uuid.UUID)
+	id, ok := r.Context().Value(UserIDKey).(uuid.UUID)
 	if !ok {
 		respWithError(w, http.StatusInternalServerError, "missing user id in context")
 		return
@@ -329,7 +329,7 @@ func (cfg *APIConfig) HandlerUpdateUser(w http.ResponseWriter, r *http.Request) 
 		hashedPasswordParam = sql.NullString{String: hash, Valid: true}
 	}
 
-	id, ok := r.Context().Value(userIDKey).(uuid.UUID)
+	id, ok := r.Context().Value(UserIDKey).(uuid.UUID)
 	if !ok {
 		respWithError(w, http.StatusInternalServerError, "missing user id in context")
 		return
@@ -359,7 +359,7 @@ func (cfg *APIConfig) HandlerUpdateUser(w http.ResponseWriter, r *http.Request) 
 }
 
 func (cfg *APIConfig) HandlerDeleteUser(w http.ResponseWriter, r *http.Request) {
-	id, ok := r.Context().Value(userIDKey).(uuid.UUID)
+	id, ok := r.Context().Value(UserIDKey).(uuid.UUID)
 	if !ok {
 		respWithError(w, http.StatusInternalServerError, "missing user id in context")
 		return

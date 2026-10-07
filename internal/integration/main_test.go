@@ -1,18 +1,19 @@
-package handlers
+package integration
 
 import (
 	"os"
 	"testing"
 
+	"github.com/MhdFiras-3/feedsanctum/internal/handlers"
 	"github.com/MhdFiras-3/feedsanctum/internal/testingutils"
 	_ "github.com/lib/pq"
 )
 
-var testCfg *APIConfig
+var testCfg *handlers.APIConfig
 
 func TestMain(m *testing.M) {
 	queries, db, cleanup := testingutils.SetupTestDB()
-	testCfg = &APIConfig{
+	testCfg = &handlers.APIConfig{
 		DB:     queries,
 		DBConn: db,
 	}

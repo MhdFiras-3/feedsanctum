@@ -1,10 +1,12 @@
-package scraper
+package integration
 
 import (
 	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/MhdFiras-3/feedsanctum/internal/scraper"
 )
 
 func TestFetchFeed(t *testing.T) {
@@ -29,7 +31,7 @@ func TestFetchFeed(t *testing.T) {
 	}))
 	defer testServer.Close()
 
-	feed, err := fetchFeed(context.Background(), testServer.URL)
+	feed, err := scraper.FetchFeed(context.Background(), testServer.URL)
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}
@@ -89,7 +91,7 @@ func TestParsePubTime(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			res, err := parsePubTime(tt.rawTime)
+			res, err := scraper.ParsePubTime(tt.rawTime)
 
 			if (err != nil) != tt.expectErr {
 				t.Errorf("expected err: %v, got: %v", tt.expectErr, err)
@@ -136,7 +138,7 @@ func TestScrapeFeed(t *testing.T) {
 		t.Fatalf("failed to create feed in DB: %v", err)
 	}
 	// Verify the two posts should get created (console log)
-	err = scrapeFeed(ctx, testCfg.DB, mockServer.URL, feed.ID)
+	err = scraper.ScrapeFeed(ctx, testCfg.DB, mockServer.URL, feed.ID)
 	if err != nil {
 		t.Fatalf("expected no error scraping feed, got %v", err)
 	}
@@ -149,7 +151,7 @@ func TestScrapeFeed(t *testing.T) {
 		t.Fatalf("expected 2 posts in DB, got %d", len(posts))
 	}
 	// Verify the two posts should get skipped (console log)
-	err = scrapeFeed(ctx, testCfg.DB, mockServer.URL, feed.ID)
+	err = scraper.ScrapeFeed(ctx, testCfg.DB, mockServer.URL, feed.ID)
 	if err != nil {
 		t.Fatalf("expected no error on duplicate scrape, got %v", err)
 	}

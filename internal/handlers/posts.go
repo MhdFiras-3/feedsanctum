@@ -24,7 +24,7 @@ func (cfg *APIConfig) HandlerGetPostsForUser(w http.ResponseWriter, r *http.Requ
 		PublishedAt *time.Time `json:"published_at"`
 	}
 
-	userID, ok := r.Context().Value(userIDKey).(uuid.UUID)
+	userID, ok := r.Context().Value(UserIDKey).(uuid.UUID)
 	if !ok {
 		respWithError(w, http.StatusInternalServerError, "missing user id in context")
 		log.Println("failed to get user id from context to get posts for user")
@@ -72,7 +72,7 @@ func (cfg *APIConfig) HandlerMarkPostRead(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	userID, ok := r.Context().Value(userIDKey).(uuid.UUID)
+	userID, ok := r.Context().Value(UserIDKey).(uuid.UUID)
 	if !ok {
 		respWithError(w, http.StatusInternalServerError, "missing user id in context")
 		log.Println("failed to get user id from context to mark post read")
@@ -113,7 +113,7 @@ func (cfg *APIConfig) HandlerGetReadPostsForUser(w http.ResponseWriter, r *http.
 		PublishedAt *time.Time `json:"published_at"`
 		ReadAt      time.Time  `json:"read_at"`
 	}
-	userID, ok := r.Context().Value(userIDKey).(uuid.UUID)
+	userID, ok := r.Context().Value(UserIDKey).(uuid.UUID)
 	if !ok {
 		respWithError(w, http.StatusInternalServerError, "missing user id in context")
 		log.Println("failed to get user id from context to get post reads for user")

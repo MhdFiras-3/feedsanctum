@@ -1,4 +1,4 @@
-package handlers
+package integration
 
 import (
 	"net/http"
@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/MhdFiras-3/feedsanctum/internal/auth"
+	"github.com/MhdFiras-3/feedsanctum/internal/handlers"
 	"github.com/google/uuid"
 )
 
@@ -21,7 +22,7 @@ func TestMiddlewareAuth(t *testing.T) {
 	nextHandlerCalled := false
 	testHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-		id, ok := r.Context().Value(userIDKey).(uuid.UUID)
+		id, ok := r.Context().Value(handlers.UserIDKey).(uuid.UUID)
 		if !ok || id != userID {
 			t.Errorf("expected user ID %s in context, got %s", userID, id)
 		}

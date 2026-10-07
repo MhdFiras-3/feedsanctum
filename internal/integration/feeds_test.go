@@ -1,4 +1,4 @@
-package handlers
+package integration
 
 import (
 	"bytes"
@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/MhdFiras-3/feedsanctum/internal/database"
+	"github.com/MhdFiras-3/feedsanctum/internal/handlers"
 	"github.com/google/uuid"
 )
 
@@ -40,7 +41,7 @@ func TestHandlerCreateFeed(t *testing.T) {
 		t.Fatalf("failed to create request: %v", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	ctx := context.WithValue(req.Context(), userIDKey, user.ID)
+	ctx := context.WithValue(req.Context(), handlers.UserIDKey, user.ID)
 	req = req.WithContext(ctx)
 
 	rr := httptest.NewRecorder()
@@ -150,7 +151,7 @@ func TestHandlerCreateFeed_ErrorCases(t *testing.T) {
 			req.Header.Set("Content-Type", "application/json")
 
 			if tt.injectUserID {
-				ctx := context.WithValue(req.Context(), userIDKey, user.ID)
+				ctx := context.WithValue(req.Context(), handlers.UserIDKey, user.ID)
 				req = req.WithContext(ctx)
 			}
 

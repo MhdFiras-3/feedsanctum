@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/MhdFiras-3/feedsanctum/internal/database"
+	"github.com/MhdFiras-3/feedsanctum/internal/scraper"
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"github.com/lib/pq"
@@ -46,7 +47,7 @@ func (cfg *APIConfig) HandlerCreateFeed(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	userID, ok := r.Context().Value(userIDKey).(uuid.UUID)
+	userID, ok := r.Context().Value(UserIDKey).(uuid.UUID)
 	if !ok {
 		respWithError(w, http.StatusInternalServerError, "missing user id in context")
 		log.Println("failed to get user id from context to create feed")
@@ -86,6 +87,9 @@ func (cfg *APIConfig) HandlerCreateFeed(w http.ResponseWriter, r *http.Request) 
 		log.Printf("failed to commit tx: %v", err)
 		return
 	}
+
+	go scraper.ScrapeFeed(cfg.ServerCTX, cfg.DB, reqData.URL, feedDB.ID)
+
 	respWithJson(w, http.StatusCreated, response{
 		ID:        feedFollowDB.ID,
 		UserID:    feedFollowDB.UserID,
@@ -107,7 +111,7 @@ func (cfg *APIConfig) HandlerGetFeedFollows(w http.ResponseWriter, r *http.Reque
 		CreatedAt time.Time `json:"created_at"`
 		UpdatedAt time.Time `json:"updated_at"`
 	}
-	userID, ok := r.Context().Value(userIDKey).(uuid.UUID)
+	userID, ok := r.Context().Value(UserIDKey).(uuid.UUID)
 	if !ok {
 		respWithError(w, http.StatusInternalServerError, "missing user id in context")
 		log.Println("failed to get user id from context to get feed follows")
@@ -144,7 +148,7 @@ func (cfg *APIConfig) HandlerDeleteFeedFollow(w http.ResponseWriter, r *http.Req
 		log.Println("failed to get feed id from url to delete feed follow")
 		return
 	}
-	userID, ok := r.Context().Value(userIDKey).(uuid.UUID)
+	userID, ok := r.Context().Value(UserIDKey).(uuid.UUID)
 	if !ok {
 		respWithError(w, http.StatusInternalServerError, "missing user id in context")
 		log.Println("failed to get user id from context to delete feed follow")
@@ -271,7 +275,7 @@ func (cfg *APIConfig) HandlerCreateFeedFollow(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	userID, ok := r.Context().Value(userIDKey).(uuid.UUID)
+	userID, ok := r.Context().Value(UserIDKey).(uuid.UUID)
 	if !ok {
 		respWithError(w, http.StatusInternalServerError, "missing user id in context")
 		log.Println("failed to get user id from context to follow feed")

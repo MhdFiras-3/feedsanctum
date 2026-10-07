@@ -14,11 +14,12 @@ import (
 	"time"
 
 	"github.com/MhdFiras-3/feedsanctum/internal/database"
+
 	"github.com/google/uuid"
 	"github.com/lib/pq"
 )
 
-func fetchFeed(ctx context.Context, feedURL string) (*RSSFeed, error) {
+func FetchFeed(ctx context.Context, feedURL string) (*RSSFeed, error) {
 	req, err := http.NewRequestWithContext(ctx, "GET", feedURL, nil)
 	if err != nil {
 		return nil, err
@@ -50,8 +51,8 @@ func fetchFeed(ctx context.Context, feedURL string) (*RSSFeed, error) {
 	return rssFeedData, nil
 }
 
-func scrapeFeed(ctx context.Context, DB *database.Queries, feedURL string, feedID uuid.UUID) error {
-	rssDataFeed, err := fetchFeed(ctx, feedURL)
+func ScrapeFeed(ctx context.Context, DB *database.Queries, feedURL string, feedID uuid.UUID) error {
+	rssDataFeed, err := FetchFeed(ctx, feedURL)
 	if err != nil {
 		return err
 	}
@@ -83,7 +84,7 @@ func scrapeFeed(ctx context.Context, DB *database.Queries, feedURL string, feedI
 			String: item.Description,
 			Valid:  item.Description != "",
 		}
-		itemNullPub, parseErr := parsePubTime(item.PubDate)
+		itemNullPub, parseErr := ParsePubTime(item.PubDate)
 		if err != nil {
 			log.Printf("%v", parseErr)
 		}
@@ -128,7 +129,7 @@ func StartScraping(ctx context.Context, DB *database.Queries, tick time.Duration
 			wg.Add(1)
 			go func(feedURL string, feedID uuid.UUID) {
 				defer wg.Done()
-				scrapeFeed(ctx, DB, feedURL, feedID)
+				ScrapeFeed(ctx, DB, feedURL, feedID)
 
 			}(feed.Url, feed.ID)
 
@@ -138,7 +139,7 @@ func StartScraping(ctx context.Context, DB *database.Queries, tick time.Duration
 
 }
 
-func parsePubTime(rawLayout string) (sql.NullTime, error) {
+func ParsePubTime(rawLayout string) (sql.NullTime, error) {
 	if rawLayout == "" {
 		return sql.NullTime{}, nil
 	}
