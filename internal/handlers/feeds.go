@@ -88,7 +88,11 @@ func (cfg *APIConfig) HandlerCreateFeed(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	go scraper.ScrapeFeed(cfg.ServerCTX, cfg.DB, reqData.URL, feedDB.ID)
+	go func() {
+		if err := scraper.ScrapeFeed(cfg.ServerCTX, cfg.DB, reqData.URL, feedDB.ID); err != nil {
+			log.Printf("immediate scrape failed for feed ID:%s, URL:%s: %v", feedDB.ID, feedDB.Url, err)
+		}
+	}()
 
 	respWithJson(w, http.StatusCreated, response{
 		ID:        feedFollowDB.ID,

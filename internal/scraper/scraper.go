@@ -10,6 +10,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"runtime/debug"
 	"sync"
 	"time"
 
@@ -51,8 +52,15 @@ func FetchFeed(ctx context.Context, feedURL string) (*RSSFeed, error) {
 	return rssFeedData, nil
 }
 
-func ScrapeFeed(ctx context.Context, DB *database.Queries, feedURL string, feedID uuid.UUID) error {
-	rssDataFeed, err := FetchFeed(ctx, feedURL)
+func ScrapeFeed(ctx context.Context, DB *database.Queries, feedURL string, feedID uuid.UUID) (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			log.Printf("panic in scraper for feed ID: %s, URL: %s: %v\n%s", feedID, feedURL, r, debug.Stack())
+			err = fmt.Errorf("scraper panic: %v", r)
+		}
+	}()
+	var rssDataFeed *RSSFeed
+	rssDataFeed, err = FetchFeed(ctx, feedURL)
 	if err != nil {
 		return err
 	}
@@ -62,9 +70,9 @@ func ScrapeFeed(ctx context.Context, DB *database.Queries, feedURL string, feedI
 		return err
 	}
 
-	postURLs, err := DB.GetPostsURLsByFeedID(ctx, feedID)
-	if err != nil {
-		log.Printf("failed to get posts urls: %v", err)
+	postURLs, fetchURLErr := DB.GetPostsURLsByFeedID(ctx, feedID)
+	if fetchURLErr != nil {
+		log.Printf("failed to get posts urls: %v", fetchURLErr)
 	}
 	postURLsMap := map[string]struct{}{}
 
@@ -85,25 +93,25 @@ func ScrapeFeed(ctx context.Context, DB *database.Queries, feedURL string, feedI
 			Valid:  item.Description != "",
 		}
 		itemNullPub, parseErr := ParsePubTime(item.PubDate)
-		if err != nil {
+		if parseErr != nil {
 			log.Printf("%v", parseErr)
 		}
 
-		_, err = DB.CreatePost(ctx, database.CreatePostParams{
+		_, createPostErr := DB.CreatePost(ctx, database.CreatePostParams{
 			Title:       item.Title,
 			Url:         item.Link,
 			Description: itemNullDescrip,
 			FeedID:      feedID,
 			PublishedAt: itemNullPub,
 		})
-		if err != nil {
+		if createPostErr != nil {
 			var pqErr *pq.Error
-			if errors.As(err, &pqErr) && pqErr.Code == "23505" {
+			if errors.As(createPostErr, &pqErr) && pqErr.Code == "23505" {
 				log.Printf("unique violation on constraint: post already exist id: %s", feedID)
 				skipped++
 				continue
 			}
-			log.Printf("failed to create post: %v, url: %s", err, item.Link)
+			log.Printf("failed to create post: %v, url: %s", createPostErr, item.Link)
 			failed++
 			continue
 		}

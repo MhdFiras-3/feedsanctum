@@ -1425,7 +1425,7 @@ components:
         - feed_id
         - name
 
-    responses:
+  responses:
       RateLimitExceeded:
         description: Returned when the client exceeds the allowed request rate.
         content:
