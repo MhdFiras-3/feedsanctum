@@ -59,6 +59,7 @@ func ScrapeFeed(ctx context.Context, DB *database.Queries, feedURL string, feedI
 			err = fmt.Errorf("scraper panic: %v", r)
 		}
 	}()
+
 	var rssDataFeed *RSSFeed
 	rssDataFeed, err = FetchFeed(ctx, feedURL)
 	if err != nil {
@@ -137,7 +138,11 @@ func StartScraping(ctx context.Context, DB *database.Queries, tick time.Duration
 			wg.Add(1)
 			go func(feedURL string, feedID uuid.UUID) {
 				defer wg.Done()
-				ScrapeFeed(ctx, DB, feedURL, feedID)
+				scrapeCTX, cancle := context.WithTimeout(ctx, 30*time.Second)
+				defer cancle()
+				if err := ScrapeFeed(scrapeCTX, DB, feedURL, feedID); err != nil {
+					log.Printf("failed to scrape feed. Feed ID:%s, URL:%s, %v", feedID, feedURL, err)
+				}
 
 			}(feed.Url, feed.ID)
 

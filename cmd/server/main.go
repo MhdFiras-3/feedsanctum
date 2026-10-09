@@ -121,7 +121,7 @@ func main() {
 		WriteTimeout: 10 * time.Second,
 	}
 
-	go scraper.StartScraping(ctx, apicfg.DB, apicfg.Ticker)
+	go scraper.StartScraping(apicfg.ServerCTX, apicfg.DB, apicfg.Ticker)
 	go func() {
 		fmt.Printf("serving on %s\n", port)
 		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
