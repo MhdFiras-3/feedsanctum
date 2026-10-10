@@ -138,10 +138,17 @@ func StartScraping(ctx context.Context, DB *database.Queries, tick time.Duration
 			wg.Add(1)
 			go func(feedURL string, feedID uuid.UUID) {
 				defer wg.Done()
-				scrapeCTX, cancle := context.WithTimeout(ctx, 30*time.Second)
-				defer cancle()
+				scrapeCTX, cancel := context.WithTimeout(ctx, 30*time.Second)
+				defer cancel()
 				if err := ScrapeFeed(scrapeCTX, DB, feedURL, feedID); err != nil {
-					log.Printf("failed to scrape feed. Feed ID:%s, URL:%s, %v", feedID, feedURL, err)
+					if errors.Is(err, context.DeadlineExceeded) {
+						log.Printf("scrape timedout after 30s: feed ID: %s URL: %s", feedID, feedURL)
+					} else if errors.Is(err, context.Canceled) {
+						log.Printf("scrape cancelled feed ID: %s URL: %s", feedID, feedURL)
+					} else {
+						log.Printf("failed to scrape feed. Feed ID: %s, URL: %s, Error: %v", feedID, feedURL, err)
+					}
+
 				}
 
 			}(feed.Url, feed.ID)
